@@ -38,7 +38,7 @@ func TestPythonCreateFile(t *testing.T) {
 
 	assertEquals(expected, actual, t)
 
-	os.Remove("../runnerFiles/PythonRunner.py")
+	os.Remove(fileLocation)
 }
 
 func TestRunPythonCode(t *testing.T) {
@@ -51,6 +51,7 @@ func TestRunPythonCode(t *testing.T) {
 		return
 	}
 
+	//TODO:Check if the file was properly deleted
 	assertEquals(expected, actual, t)
 }
 

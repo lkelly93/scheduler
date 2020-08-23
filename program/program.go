@@ -3,6 +3,7 @@ package program
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 )
 
@@ -38,6 +39,8 @@ func Run(prog *Program) (string, error) {
 	command := exec.Command(sysCommand, fileLocation)
 
 	sysOut, err := command.CombinedOutput()
+
+	os.Remove(fileLocation)
 
 	return string(sysOut), err
 }
