@@ -8,15 +8,13 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/lkelly93/scheduler/runner"
+	"github.com/lkelly93/scheduler/internal/runner"
 )
 
-//Program represents a program that needs to be run
+//Program represents a Program that needs to be run
 type Program struct {
-	Lang       string
-	Code       string
-	FileRunner string
-	OutputFile string
+	Lang string
+	Code string
 }
 
 //NewProgram creates a new program struct and returns it.

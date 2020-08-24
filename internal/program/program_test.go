@@ -3,7 +3,7 @@ package program_test
 import (
 	"testing"
 
-	"github.com/lkelly93/scheduler/program"
+	"github.com/lkelly93/scheduler/internal/program"
 )
 
 func TestCreateProgram(t *testing.T) {

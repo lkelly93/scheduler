@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/lkelly93/scheduler/runner"
+	"github.com/lkelly93/scheduler/internal/runner"
 )
 
 func TestPythonCreateFile(t *testing.T) {
