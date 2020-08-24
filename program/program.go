@@ -34,14 +34,9 @@ func NewProgram(lang string, code string) (*Program, error) {
 //run was successful
 func Run(prog *Program) (string, error) {
 	runnerFileFunctor := GetFunctor(prog.Lang)
-
 	sysCommand, fileLocation := runnerFileFunctor(prog)
-
 	command := exec.Command(sysCommand, fileLocation)
-
 	sysOut, err := command.CombinedOutput()
-
 	os.Remove(fileLocation)
-
 	return string(sysOut), err
 }

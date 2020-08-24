@@ -27,6 +27,7 @@ func TestUnsupportedLanguage(t *testing.T) {
 
 }
 
+/****** Python Tests******/
 func TestPythonCreateFile(t *testing.T) {
 	prog, _ := program.NewProgram("python", "print('Hello World')")
 	runnerFileFunctor := program.GetFunctor(prog.Lang)
@@ -70,6 +71,53 @@ func TestRunBadPythonCode(t *testing.T) {
 	assertEquals(expected, actual, t)
 }
 
+/****** Java Tests******/
+func TestJavaCrateFile(t *testing.T) {
+	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
+	runnerFileFunctor := program.GetFunctor(prog.Lang)
+
+	sysCommand, fileLocation := runnerFileFunctor(prog)
+
+	actual := sysCommand + " " + fileLocation
+	expected := "java ../runnerFiles/JavaRunner.java"
+
+	assertEquals(expected, actual, t)
+
+	os.Remove(fileLocation)
+}
+
+func TestRunJavaCode(t *testing.T) {
+	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
+	actual, err := program.Run(prog)
+	expected := "Hello World\n"
+
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+
+	//TODO:Check if the file was properly deleted
+	assertEquals(expected, actual, t)
+}
+
+func TestRunBadJavaCode(t *testing.T) {
+	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
+	actual, err := program.Run(prog)
+	expected := "../runnerFiles/JavaRunner.java:1: error: ';' expected\n" +
+		"import java.util.*;public class JavaRunner{public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
+		"                                                                                                                   ^\n" +
+		"1 error\n" +
+		"error: compilation failed\n"
+
+	if err == nil {
+		t.Errorf("This should of failed and did not")
+	}
+
+	assertEquals(expected, actual, t)
+
+}
+
+/****** Supporting Methods ******/
 func assertEquals(expected string, actual string, t *testing.T) {
 	if actual != expected {
 		i := 0
