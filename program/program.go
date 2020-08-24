@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/lkelly93/code-runner/runners"
+	runner_files "github.com/lkelly93/code-runner/runners"
 )
 
 //Program represents a program that needs to be run
@@ -18,7 +21,7 @@ type Program struct {
 //NewProgram creates a new program struct and returns it.
 //If the given language is not supported NewProgram will throw an error.
 func NewProgram(lang string, code string) (*Program, error) {
-	if IsSupportedLanguage(lang) {
+	if runners.IsSupportedLanguage(lang) {
 		prog := Program{
 			Lang: lang,
 			Code: code,
@@ -33,8 +36,8 @@ func NewProgram(lang string, code string) (*Program, error) {
 //Run returns the result of the run and the err message. If err == nil then the
 //run was successful
 func Run(prog *Program) (string, error) {
-	runnerFileFunctor := GetFunctor(prog.Lang)
-	sysCommand, fileLocation := runnerFileFunctor(prog)
+	runnerFileFunctor := runner_files.GetFunctor(prog.Lang)
+	sysCommand, fileLocation := runnerFileFunctor(prog.Code)
 	command := exec.Command(sysCommand, fileLocation)
 	sysOut, err := command.CombinedOutput()
 	os.Remove(fileLocation)

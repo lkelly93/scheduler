@@ -1,7 +1,6 @@
 package program_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/lkelly93/code-runner/program"
@@ -19,28 +18,7 @@ func TestCreateProgram(t *testing.T) {
 	}
 }
 
-func TestUnsupportedLanguage(t *testing.T) {
-	_, actual := program.NewProgram("NotALang", "NotRealCode")
-	expected := "NotALang is not a supported language"
-
-	assertEquals(expected, actual.Error(), t)
-
-}
-
 /****** Python Tests******/
-func TestPythonCreateFile(t *testing.T) {
-	prog, _ := program.NewProgram("python", "print('Hello World')")
-	runnerFileFunctor := program.GetFunctor(prog.Lang)
-
-	sysCommand, fileLocation := runnerFileFunctor(prog)
-
-	actual := sysCommand + " " + fileLocation
-	expected := "python3 ../runnerFiles/PythonRunner.py"
-
-	assertEquals(expected, actual, t)
-
-	os.Remove(fileLocation)
-}
 
 func TestRunPythonCode(t *testing.T) {
 	prog, _ := program.NewProgram("python", "print('Hello World')")
@@ -48,8 +26,7 @@ func TestRunPythonCode(t *testing.T) {
 	expected := "Hello World\n"
 
 	if err != nil {
-		t.Errorf(err.Error())
-		return
+		t.Fatal(err.Error())
 	}
 
 	//TODO:Check if the file was properly deleted
@@ -59,32 +36,19 @@ func TestRunPythonCode(t *testing.T) {
 func TestRunBadPythonCode(t *testing.T) {
 	prog, _ := program.NewProgram("python", "print('Hi")
 	actual, err := program.Run(prog)
-	expected := "  File \"../runnerFiles/PythonRunner.py\", line 1\n" +
+	expected := "  File \"../bin/runner_files/PythonRunner.py\", line 1\n" +
 		"    print('Hi\n" +
 		"            ^\n" +
 		"SyntaxError: EOL while scanning string literal\n"
 
 	if err == nil {
-		t.Errorf("This should of failed and did not")
+		t.Fatal("This should of failed and did not")
 	}
 
 	assertEquals(expected, actual, t)
 }
 
 /****** Java Tests******/
-func TestJavaCrateFile(t *testing.T) {
-	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
-	runnerFileFunctor := program.GetFunctor(prog.Lang)
-
-	sysCommand, fileLocation := runnerFileFunctor(prog)
-
-	actual := sysCommand + " " + fileLocation
-	expected := "java ../runnerFiles/JavaRunner.java"
-
-	assertEquals(expected, actual, t)
-
-	os.Remove(fileLocation)
-}
 
 func TestRunJavaCode(t *testing.T) {
 	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
@@ -92,8 +56,7 @@ func TestRunJavaCode(t *testing.T) {
 	expected := "Hello World\n"
 
 	if err != nil {
-		t.Errorf(err.Error())
-		return
+		t.Fatal(err.Error())
 	}
 
 	//TODO:Check if the file was properly deleted
@@ -103,14 +66,14 @@ func TestRunJavaCode(t *testing.T) {
 func TestRunBadJavaCode(t *testing.T) {
 	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
 	actual, err := program.Run(prog)
-	expected := "../runnerFiles/JavaRunner.java:1: error: ';' expected\n" +
+	expected := "../bin/runner_files/JavaRunner.java:1: error: ';' expected\n" +
 		"import java.util.*;public class JavaRunner{public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
 		"                                                                                                                   ^\n" +
 		"1 error\n" +
 		"error: compilation failed\n"
 
 	if err == nil {
-		t.Errorf("This should of failed and did not")
+		t.Fatal("This should of failed and did not")
 	}
 
 	assertEquals(expected, actual, t)
