@@ -1,10 +1,10 @@
-package runners_test
+package runner_test
 
 import (
 	"os"
 	"testing"
 
-	"github.com/lkelly93/code-runner/runners"
+	"github.com/lkelly93/scheduler/runner"
 )
 
 func TestPythonCreateFile(t *testing.T) {
@@ -24,7 +24,7 @@ func TestJavaCreateFile(t *testing.T) {
 }
 
 func genericCreateFile(lang string, code string, expected string, t *testing.T) {
-	runnerFileFunctor := runners.GetFunctor(lang)
+	runnerFileFunctor := runner.GetFunctor(lang)
 
 	sysCommand, fileLocation := runnerFileFunctor(code)
 
