@@ -8,29 +8,32 @@ import (
 )
 
 func TestPythonCreateFile(t *testing.T) {
-	runnerFileFunctor := runners.GetFunctor("python")
+	lang := "python"
+	code := "print('Hello World')"
+	expected := "python3 ../runner_files/PythonRunner.py"
 
-	sysCommand, fileLocation := runnerFileFunctor("print('Hello World')")
-
-	actual := sysCommand + " " + fileLocation
-	expected := "python3 ../bin/runner_files/PythonRunner.py"
-
-	assertEquals(expected, actual, t)
-
-	os.Remove(fileLocation)
+	genericCreateFile(lang, code, expected, t)
 }
 
-func TestJavaCrateFile(t *testing.T) {
-	runnerFileFunctor := runners.GetFunctor("java")
+func TestJavaCreateFile(t *testing.T) {
+	lang := "java"
+	code := "public static void main(String[] args){System.out.println(\"Hello World\");}"
+	expected := "java ../runner_files/JavaRunner.java"
 
-	sysCommand, fileLocation := runnerFileFunctor("public static void main(String[] args){System.out.println(\"Hello World\");}")
+	genericCreateFile(lang, code, expected, t)
+}
+
+func genericCreateFile(lang string, code string, expected string, t *testing.T) {
+	runnerFileFunctor := runners.GetFunctor(lang)
+
+	sysCommand, fileLocation := runnerFileFunctor(code)
 
 	actual := sysCommand + " " + fileLocation
-	expected := "java ../bin/runner_files/JavaRunner.java"
 
 	assertEquals(expected, actual, t)
 
 	os.Remove(fileLocation)
+
 }
 
 /****** Supporting Methods ******/

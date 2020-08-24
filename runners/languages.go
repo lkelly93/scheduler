@@ -36,7 +36,7 @@ func createFileAndAddCode(outFileName string, code string) error {
 
 func getRunnerFileLocation(suffix string) string {
 	var location strings.Builder
-	location.WriteString("../bin/runner_files/")
+	location.WriteString("../runner_files/")
 	location.WriteString(suffix)
 	return location.String()
 }

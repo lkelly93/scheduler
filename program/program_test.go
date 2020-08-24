@@ -22,38 +22,42 @@ func TestCreateProgram(t *testing.T) {
 
 func TestRunPythonCode(t *testing.T) {
 	prog, _ := program.NewProgram("python", "print('Hello World')")
-	actual, err := program.Run(prog)
 	expected := "Hello World\n"
-
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	//TODO:Check if the file was properly deleted
-	assertEquals(expected, actual, t)
+	genericRunCode(prog, expected, t)
 }
 
 func TestRunBadPythonCode(t *testing.T) {
 	prog, _ := program.NewProgram("python", "print('Hi")
-	actual, err := program.Run(prog)
-	expected := "  File \"../bin/runner_files/PythonRunner.py\", line 1\n" +
+	expected := "  File \"../runner_files/PythonRunner.py\", line 1\n" +
 		"    print('Hi\n" +
 		"            ^\n" +
 		"SyntaxError: EOL while scanning string literal\n"
 
-	if err == nil {
-		t.Fatal("This should of failed and did not")
-	}
-
-	assertEquals(expected, actual, t)
+	genericRunBadCode(prog, expected, t)
 }
 
 /****** Java Tests******/
 
 func TestRunJavaCode(t *testing.T) {
 	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
-	actual, err := program.Run(prog)
 	expected := "Hello World\n"
+	genericRunCode(prog, expected, t)
+}
+
+func TestRunBadJavaCode(t *testing.T) {
+	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
+	expected := "../runner_files/JavaRunner.java:1: error: ';' expected\n" +
+		"import java.util.*;public class JavaRunner{public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
+		"                                                                                                                   ^\n" +
+		"1 error\n" +
+		"error: compilation failed\n"
+
+	genericRunBadCode(prog, expected, t)
+
+}
+
+func genericRunCode(prog *program.Program, expected string, t *testing.T) {
+	actual, err := program.Run(prog)
 
 	if err != nil {
 		t.Fatal(err.Error())
@@ -63,14 +67,8 @@ func TestRunJavaCode(t *testing.T) {
 	assertEquals(expected, actual, t)
 }
 
-func TestRunBadJavaCode(t *testing.T) {
-	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
+func genericRunBadCode(prog *program.Program, expected string, t *testing.T) {
 	actual, err := program.Run(prog)
-	expected := "../bin/runner_files/JavaRunner.java:1: error: ';' expected\n" +
-		"import java.util.*;public class JavaRunner{public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
-		"                                                                                                                   ^\n" +
-		"1 error\n" +
-		"error: compilation failed\n"
 
 	if err == nil {
 		t.Fatal("This should of failed and did not")
