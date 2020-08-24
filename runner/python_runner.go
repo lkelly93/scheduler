@@ -3,7 +3,7 @@ package runner
 import "log"
 
 //Python creates a runnerFile for python langues.
-func Python(code string) (string, string) {
+func python(code string) (string, string) {
 	langCommand := "python3"
 	outFileName := getRunnerFileLocation("PythonRunner.py")
 

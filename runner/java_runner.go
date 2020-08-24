@@ -6,7 +6,7 @@ import (
 )
 
 //Java creates a runnerFile for java langues.
-func Java(code string) (string, string) {
+func java(code string) (string, string) {
 	langCommand := "java"
 	outFileName := getRunnerFileLocation("JavaRunner.java")
 

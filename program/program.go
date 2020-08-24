@@ -1,3 +1,5 @@
+//A package to represent a program written in a generic language.
+//This package can run the given program and return the result
 package program
 
 import (

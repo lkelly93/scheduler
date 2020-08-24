@@ -1,3 +1,6 @@
+//This package supports the creation of runner files for languages.
+//A runner file is a file properly formatted in a given language that can be
+//executed by the program package.
 package runner
 
 import (
@@ -6,8 +9,8 @@ import (
 )
 
 var supportedLanguages = map[string]func(string) (string, string){
-	"python": Python,
-	"java":   Java,
+	"python": python,
+	"java":   java,
 }
 
 //IsSupportedLanguage checks if the given language is supported
