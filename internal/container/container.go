@@ -5,29 +5,31 @@ package container
 import (
 	"context"
 	"io"
-	"log"
 	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 )
 
-//Docker is a structure that represents a docker container
-type Docker struct {
-	Name string
+//BuildImageOptions represents all the possible options for BuildImages
+type BuildImageOptions struct {
+	Dockerfile string
+	Tags       []string
 }
 
 //BuildImage rebuilds the docker image. This method takes a very long time to
 //execute and should only be called at initial startup.
-func BuildImage() {
-	dockerfile := "Dockerfile"
-	dockerTar := "DockerTar.tar.gz"
+func BuildImage(opts *BuildImageOptions) error {
+	dockerfile := opts.Dockerfile
+	tags := opts.Tags
 
-	err := zipDockerFile(dockerfile, dockerTar)
-	if err != nil {
-		log.Fatal(err, " :unable to create tar of DockerFile")
-	}
+	dockerTar := dockerfile + ".tar.gz"
+
+	err := tarDockerFile(dockerfile, dockerTar)
 	defer os.Remove(dockerTar)
+	if err != nil {
+		return err
+	}
 
 	// err := exec.Command("bash", "TarTheDocker.sh").Run()
 	// if err != nil {
@@ -36,16 +38,15 @@ func BuildImage() {
 
 	cli, err := client.NewEnvClient()
 	if err != nil {
-		log.Fatal(err, " :unable to init client")
+		return err
 	}
 
 	buildCtx, err := os.Open(dockerTar)
 	if err != nil {
-		log.Fatal(err, " :unable to open tar file")
+		return err
 	}
 
 	suppressBuildOutput := true
-	var tags []string = []string{"secure:latest"}
 	var buildArgs = map[string]*string{
 		"--rm": nil,
 	}
@@ -63,12 +64,14 @@ func BuildImage() {
 		buildOps)
 
 	if err != nil {
-		log.Fatal(err, ": unable to build docker image")
+		return err
 	}
 
 	defer buildResponse.Body.Close()
 	_, err = io.Copy(os.Stdout, buildResponse.Body)
 	if err != nil {
-		log.Fatal(err, " :unable to read the image build response")
+		return err
 	}
+
+	return nil
 }

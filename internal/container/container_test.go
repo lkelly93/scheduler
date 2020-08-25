@@ -2,7 +2,6 @@ package container_test
 
 import (
 	"context"
-	"log"
 	"testing"
 
 	"github.com/docker/docker/api/types"
@@ -10,18 +9,25 @@ import (
 	"github.com/lkelly93/scheduler/internal/container"
 )
 
-func TestBuildImage(t *testing.T) {
-	container.BuildImage()
+func TestBuildStandardImage(t *testing.T) {
+	buildOptions := container.BuildImageOptions{
+		Dockerfile: "Dockerfile_standard",
+		Tags:       []string{"secure:latest"},
+	}
+	err := container.BuildImage(&buildOptions)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 
 	cli, err := client.NewEnvClient()
 	if err != nil {
-		log.Fatal(err, " :unable to init client")
+		t.Fatalf(err.Error())
 	}
 
 	images, err := cli.ImageList(context.Background(), types.ImageListOptions{})
 
 	if err != nil {
-		log.Fatal(err, " :unable to get a list of all images in test method")
+		t.Fatalf(err.Error())
 	}
 
 	foundSecure := false
@@ -33,5 +39,6 @@ func TestBuildImage(t *testing.T) {
 	if !foundSecure {
 		t.Errorf("The image was not built")
 	}
-
 }
+
+//TODO write tests for TarDockerFile
