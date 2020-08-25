@@ -11,13 +11,8 @@ import (
 	"github.com/lkelly93/scheduler/internal/runner"
 )
 
-type execute interface {
-	Run() (string, error)
-}
-
 //Program represents a Program that needs to be run
 type Program struct {
-	Lang    string
 	Code    string
 	functor func(string) (string, string)
 }
@@ -27,7 +22,6 @@ type Program struct {
 func NewProgram(lang string, code string) (*Program, error) {
 	if runner.IsSupportedLanguage(lang) {
 		prog := Program{
-			Lang:    lang,
 			Code:    code,
 			functor: runner.GetFunctor(lang),
 		}

@@ -8,11 +8,7 @@ import (
 
 func TestCreateProgram(t *testing.T) {
 	prog, _ := program.NewProgram("python", "print('Hello World')")
-	var expectedLang = "python"
 	var expectedCode = "print('Hello World')"
-	if prog.Lang != expectedLang {
-		t.Errorf("Expected %s but got %s", expectedLang, prog.Lang)
-	}
 	if prog.Code != expectedCode {
 		t.Errorf("Expected %s but got %s", expectedCode, prog.Code)
 	}
