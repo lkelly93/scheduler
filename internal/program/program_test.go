@@ -30,7 +30,7 @@ func TestRunPythonCode(t *testing.T) {
 
 func TestRunBadPythonCode(t *testing.T) {
 	prog, _ := program.NewExecutable("python", "print('Hi")
-	expected := "  File \"../runner_files/PythonRunner.py\", line 1\n" +
+	expected := "PythonRunner.py\", line 1\n" +
 		"    print('Hi\n" +
 		"            ^\n" +
 		"SyntaxError: EOL while scanning string literal\n"
@@ -48,7 +48,7 @@ func TestRunJavaCode(t *testing.T) {
 
 func TestRunBadJavaCode(t *testing.T) {
 	prog, _ := program.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
-	expected := "../runner_files/JavaRunner.java:1: error: ';' expected\n" +
+	expected := "JavaRunner.java:1: error: ';' expected\n" +
 		"import java.util.*;public class JavaRunner{public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
 		"                                                                                                                   ^\n" +
 		"1 error\n" +
@@ -59,25 +59,15 @@ func TestRunBadJavaCode(t *testing.T) {
 }
 
 func genericRunCode(prog program.Executable, expected string, t *testing.T) {
-	actual, err := prog.Run()
-
-	if err != nil {
-		t.Error(err)
-	}
+	actual := prog.Run()
 
 	//TODO:Check if the file was properly deleted
 	assertEquals(expected, actual, t)
 }
 
 func genericRunBadCode(prog program.Executable, expected string, t *testing.T) {
-	actual, err := prog.Run()
-
-	if err == nil {
-		t.Error("This should of failed and did not")
-	}
-
+	actual := prog.Run()
 	assertEquals(expected, actual, t)
-
 }
 
 /****** Supporting Methods ******/
