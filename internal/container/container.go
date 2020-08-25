@@ -11,13 +11,13 @@ import (
 	"github.com/docker/docker/client"
 )
 
-//Docker is a strucutre that represents a docker container
+//Docker is a structure that represents a docker container
 type Docker struct {
 	Name string
 }
 
 //BuildImage rebuilds the docker image. This method takes a very long time to
-//execute and should only be called at intial startup.
+//execute and should only be called at initial startup.
 func BuildImage() {
 	err := exec.Command("bash", "TarTheDocker.sh").Run()
 	if err != nil {
@@ -37,12 +37,15 @@ func BuildImage() {
 
 	suppressBuildOutput := true
 	var tags []string = []string{"secure:latest"}
+	var buildArgs = map[string]*string{
+		"--rm": nil,
+	}
 
 	buildOps := types.ImageBuildOptions{
 		SuppressOutput: suppressBuildOutput,
 		Dockerfile:     "Dockerfile",
 		Tags:           tags,
-		// BuildArgs:     {"-rm"},
+		BuildArgs:      buildArgs,
 	}
 
 	buildResponse, err := cli.ImageBuild(
@@ -51,9 +54,7 @@ func BuildImage() {
 		buildOps)
 
 	if err != nil {
-		out, _ := exec.Command("ls").Output()
-		log.Fatal(string(out) + err.Error())
-		// log.Fatal(err, ": unable to build docker image")
+		log.Fatal(err, ": unable to build docker image")
 	}
 
 	defer buildResponse.Body.Close()
