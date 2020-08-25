@@ -40,15 +40,14 @@ func Run(prog *Program) (string, error) {
 
 	//Create the file and get the data to run it
 	sysCommand, fileLocation := createRunnerFunctor(prog.Code)
+	//Remove the old files
+	defer os.Remove(fileLocation)
 
 	//Get the system resources to run the command
 	command := exec.Command(sysCommand, fileLocation)
 
 	//Run the command and get the stdOut/stdErr
 	sysOut, err := command.CombinedOutput()
-
-	//Remove the old files
-	os.Remove(fileLocation)
 
 	//Return everything
 	return string(sysOut), err

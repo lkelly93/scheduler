@@ -1,3 +1,5 @@
+//Package container is a package that will handle the creation and running
+//of the docker image that scheduler will run in
 package container
 
 import (
