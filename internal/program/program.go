@@ -35,10 +35,21 @@ func NewProgram(lang string, code string) (*Program, error) {
 //Run returns the result of the run and the err message. If err == nil then the
 //run was successful
 func Run(prog *Program) (string, error) {
-	runnerFileFunctor := runner.GetFunctor(prog.Lang)
-	sysCommand, fileLocation := runnerFileFunctor(prog.Code)
+	//Get the function to create the runner file
+	createRunnerFunctor := runner.GetFunctor(prog.Lang)
+
+	//Create the file and get the data to run it
+	sysCommand, fileLocation := createRunnerFunctor(prog.Code)
+
+	//Get the system resources to run the command
 	command := exec.Command(sysCommand, fileLocation)
+
+	//Run the command and get the stdOut/stdErr
 	sysOut, err := command.CombinedOutput()
+
+	//Remove the old files
 	os.Remove(fileLocation)
+
+	//Return everything
 	return string(sysOut), err
 }
