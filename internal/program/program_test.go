@@ -57,7 +57,7 @@ func TestRunBadJavaCode(t *testing.T) {
 }
 
 func genericRunCode(prog *program.Program, expected string, t *testing.T) {
-	actual, err := program.Run(prog)
+	actual, err := prog.Run()
 
 	if err != nil {
 		t.Fatal(err.Error())
@@ -68,7 +68,7 @@ func genericRunCode(prog *program.Program, expected string, t *testing.T) {
 }
 
 func genericRunBadCode(prog *program.Program, expected string, t *testing.T) {
-	actual, err := program.Run(prog)
+	actual, err := prog.Run()
 
 	if err == nil {
 		t.Fatal("This should of failed and did not")
