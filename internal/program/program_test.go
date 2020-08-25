@@ -6,13 +6,7 @@ import (
 	"github.com/lkelly93/scheduler/internal/program"
 )
 
-func TestCreateProgram(t *testing.T) {
-	prog, _ := program.NewProgram("python", "print('Hello World')")
-	var expectedCode = "print('Hello World')"
-	if prog.Code != expectedCode {
-		t.Errorf("Expected %s but got %s", expectedCode, prog.Code)
-	}
-}
+//TODO: Test NewProgram
 
 /****** Python Tests******/
 
@@ -52,7 +46,7 @@ func TestRunBadJavaCode(t *testing.T) {
 
 }
 
-func genericRunCode(prog *program.Program, expected string, t *testing.T) {
+func genericRunCode(prog program.Executable, expected string, t *testing.T) {
 	actual, err := prog.Run()
 
 	if err != nil {
@@ -63,7 +57,7 @@ func genericRunCode(prog *program.Program, expected string, t *testing.T) {
 	assertEquals(expected, actual, t)
 }
 
-func genericRunBadCode(prog *program.Program, expected string, t *testing.T) {
+func genericRunBadCode(prog program.Executable, expected string, t *testing.T) {
 	actual, err := prog.Run()
 
 	if err == nil {
