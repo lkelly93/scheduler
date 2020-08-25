@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"os/exec"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -19,20 +18,28 @@ type Docker struct {
 //BuildImage rebuilds the docker image. This method takes a very long time to
 //execute and should only be called at initial startup.
 func BuildImage() {
-	err := exec.Command("bash", "TarTheDocker.sh").Run()
+	dockerfile := "Dockerfile"
+	dockerTar := "DockerTar.tar.gz"
+
+	err := zipDockerFile(dockerfile, dockerTar)
 	if err != nil {
 		log.Fatal(err, " :unable to create tar of DockerFile")
 	}
+	defer os.Remove(dockerTar)
+
+	// err := exec.Command("bash", "TarTheDocker.sh").Run()
+	// if err != nil {
+	// 	log.Fatal(err, " :unable to create tar of DockerFile")
+	// }
 
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		log.Fatal(err, " :unable to init client")
 	}
 
-	buildCtx, err := os.Open("DockerTar.tar.gz")
-
+	buildCtx, err := os.Open(dockerTar)
 	if err != nil {
-		log.Fatal(err, ":unable to create tar")
+		log.Fatal(err, " :unable to open tar file")
 	}
 
 	suppressBuildOutput := true
@@ -43,7 +50,7 @@ func BuildImage() {
 
 	buildOps := types.ImageBuildOptions{
 		SuppressOutput: suppressBuildOutput,
-		Dockerfile:     "Dockerfile",
+		Dockerfile:     dockerfile,
 		Tags:           tags,
 		BuildArgs:      buildArgs,
 	}
