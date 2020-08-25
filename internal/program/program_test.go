@@ -6,18 +6,30 @@ import (
 	"github.com/lkelly93/scheduler/internal/program"
 )
 
-//TODO: Test NewProgram
+func TestNewProgram(t *testing.T) {
+	_, err := program.NewExecutable("python", "print('Hello World')")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestNewProgramFail(t *testing.T) {
+	_, err := program.NewExecutable("Not a Language", "Not Code")
+	if err == nil {
+		t.Errorf("This test should of failed but it didn't")
+	}
+}
 
 /****** Python Tests******/
 
 func TestRunPythonCode(t *testing.T) {
-	prog, _ := program.NewProgram("python", "print('Hello World')")
+	prog, _ := program.NewExecutable("python", "print('Hello World')")
 	expected := "Hello World\n"
 	genericRunCode(prog, expected, t)
 }
 
 func TestRunBadPythonCode(t *testing.T) {
-	prog, _ := program.NewProgram("python", "print('Hi")
+	prog, _ := program.NewExecutable("python", "print('Hi")
 	expected := "  File \"../runner_files/PythonRunner.py\", line 1\n" +
 		"    print('Hi\n" +
 		"            ^\n" +
@@ -29,13 +41,13 @@ func TestRunBadPythonCode(t *testing.T) {
 /****** Java Tests******/
 
 func TestRunJavaCode(t *testing.T) {
-	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
+	prog, _ := program.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
 	expected := "Hello World\n"
 	genericRunCode(prog, expected, t)
 }
 
 func TestRunBadJavaCode(t *testing.T) {
-	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
+	prog, _ := program.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
 	expected := "../runner_files/JavaRunner.java:1: error: ';' expected\n" +
 		"import java.util.*;public class JavaRunner{public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
 		"                                                                                                                   ^\n" +
@@ -50,7 +62,7 @@ func genericRunCode(prog program.Executable, expected string, t *testing.T) {
 	actual, err := prog.Run()
 
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Error(err)
 	}
 
 	//TODO:Check if the file was properly deleted
@@ -61,7 +73,7 @@ func genericRunBadCode(prog program.Executable, expected string, t *testing.T) {
 	actual, err := prog.Run()
 
 	if err == nil {
-		t.Fatal("This should of failed and did not")
+		t.Error("This should of failed and did not")
 	}
 
 	assertEquals(expected, actual, t)

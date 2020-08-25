@@ -22,9 +22,9 @@ type program struct {
 	functor func(string) (string, string)
 }
 
-//NewProgram creates a new program struct and returns it.
+//NewExecutable creates a new executable and then return it.
 //If the given language is not supported NewProgram will throw an error.
-func NewProgram(lang string, code string) (Executable, error) {
+func NewExecutable(lang string, code string) (Executable, error) {
 	functor := runner.GetFunctor(lang)
 	if functor != nil {
 		prog := program{
