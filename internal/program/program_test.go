@@ -6,29 +6,31 @@ import (
 	"github.com/lkelly93/scheduler/internal/program"
 )
 
-func TestCreateProgram(t *testing.T) {
-	prog, _ := program.NewProgram("python", "print('Hello World')")
-	var expectedLang = "python"
-	var expectedCode = "print('Hello World')"
-	if prog.Lang != expectedLang {
-		t.Errorf("Expected %s but got %s", expectedLang, prog.Lang)
+func TestNewExecutable(t *testing.T) {
+	_, err := program.NewExecutable("python", "print('Hello World')")
+	if err != nil {
+		t.Error(err)
 	}
-	if prog.Code != expectedCode {
-		t.Errorf("Expected %s but got %s", expectedCode, prog.Code)
+}
+
+func TestNewExecutableFail(t *testing.T) {
+	_, err := program.NewExecutable("Not a Language", "Not Code")
+	if err == nil {
+		t.Errorf("This test should of failed but it didn't")
 	}
 }
 
 /****** Python Tests******/
 
 func TestRunPythonCode(t *testing.T) {
-	prog, _ := program.NewProgram("python", "print('Hello World')")
+	prog, _ := program.NewExecutable("python", "print('Hello World')")
 	expected := "Hello World\n"
 	genericRunCode(prog, expected, t)
 }
 
 func TestRunBadPythonCode(t *testing.T) {
-	prog, _ := program.NewProgram("python", "print('Hi")
-	expected := "  File \"../runner_files/PythonRunner.py\", line 1\n" +
+	prog, _ := program.NewExecutable("python", "print('Hi")
+	expected := "Error on line number 1\n" +
 		"    print('Hi\n" +
 		"            ^\n" +
 		"SyntaxError: EOL while scanning string literal\n"
@@ -39,16 +41,16 @@ func TestRunBadPythonCode(t *testing.T) {
 /****** Java Tests******/
 
 func TestRunJavaCode(t *testing.T) {
-	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
+	prog, _ := program.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
 	expected := "Hello World\n"
 	genericRunCode(prog, expected, t)
 }
 
 func TestRunBadJavaCode(t *testing.T) {
-	prog, _ := program.NewProgram("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
-	expected := "../runner_files/JavaRunner.java:1: error: ';' expected\n" +
-		"import java.util.*;public class JavaRunner{public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
-		"                                                                                                                   ^\n" +
+	prog, _ := program.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
+	expected := "Error on line number 3\n" +
+		"public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
+		"                                                                        ^\n" +
 		"1 error\n" +
 		"error: compilation failed\n"
 
@@ -56,26 +58,16 @@ func TestRunBadJavaCode(t *testing.T) {
 
 }
 
-func genericRunCode(prog *program.Program, expected string, t *testing.T) {
-	actual, err := program.Run(prog)
-
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+func genericRunCode(prog program.Executable, expected string, t *testing.T) {
+	actual := prog.Run()
 
 	//TODO:Check if the file was properly deleted
 	assertEquals(expected, actual, t)
 }
 
-func genericRunBadCode(prog *program.Program, expected string, t *testing.T) {
-	actual, err := program.Run(prog)
-
-	if err == nil {
-		t.Fatal("This should of failed and did not")
-	}
-
+func genericRunBadCode(prog program.Executable, expected string, t *testing.T) {
+	actual := prog.Run()
 	assertEquals(expected, actual, t)
-
 }
 
 /****** Supporting Methods ******/

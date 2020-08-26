@@ -23,17 +23,31 @@ func TestJavaCreateFile(t *testing.T) {
 	genericCreateFile(lang, code, expected, t)
 }
 
-func genericCreateFile(lang string, code string, expected string, t *testing.T) {
-	runnerFileFunctor := runner.GetFunctor(lang)
+func TestIsSupportedLangaugeBad(t *testing.T) {
+	lang := "Not a language"
 
-	sysCommand, fileLocation := runnerFileFunctor(code)
+	if runner.IsSupportedLanguage(lang) {
+		t.Errorf("Returned that \"%s\" was a supported language, when it should not.", lang)
+	}
+}
+
+func TestIsSupportedLangaugeGood(t *testing.T) {
+	lang := "python"
+
+	if !runner.IsSupportedLanguage(lang) {
+		t.Errorf("Returned that \"%s\" was not a supported language, when it is.", lang)
+	}
+}
+
+func genericCreateFile(lang string, code string, expected string, t *testing.T) {
+	runnerFileFunctor := runner.GetNeededFunctions(lang)
+
+	sysCommand, fileLocation := runnerFileFunctor.Creator(code)
+	defer os.Remove(fileLocation)
 
 	actual := sysCommand + " " + fileLocation
 
 	assertEquals(expected, actual, t)
-
-	os.Remove(fileLocation)
-
 }
 
 /****** Supporting Methods ******/
