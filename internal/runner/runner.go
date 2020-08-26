@@ -12,26 +12,9 @@ import (
 //an executable.
 type FileCreationFunctor func(string) (string, string)
 
-//StandardErrParserFunctor represents a function that will parse the standard
-//error output for of a given language.
-type StandardErrParserFunctor func(string) string
-
-//NeededFunctions holds all the functions needed for the execution
-//of executable
-type NeededFunctions struct {
-	Creator   FileCreationFunctor
-	ParserErr StandardErrParserFunctor
-}
-
-var supportedLanguages = map[string]NeededFunctions{
-	"python": NeededFunctions{
-		Creator:   createRunnerFilePython,
-		ParserErr: parsePythonStandardErr,
-	},
-	"java": NeededFunctions{
-		Creator:   createRunnerFileJava,
-		ParserErr: parseJavaStandardErr,
-	},
+var supportedLanguages = map[string]FileCreationFunctor{
+	"python": createRunnerFilePython,
+	"java":   createRunnerFileJava,
 }
 
 //IsSupportedLanguage checks if the given language is supported
@@ -43,13 +26,20 @@ func IsSupportedLanguage(lang string) bool {
 //GetNeededFunctions returns a NeededFunctions struct with all the
 //functions needed by an executable. It retuns nil if the language
 //is not supported
-func GetNeededFunctions(lang string) *NeededFunctions {
+func GetCreateFileFunctor(lang string) FileCreationFunctor {
 	if IsSupportedLanguage(lang) {
 		functions := supportedLanguages[lang]
-		return &functions
+		return functions
 	}
 	return nil
 
+}
+
+//RemoveFilePath removes the file path from the error text of an executable.
+func RemoveFilePath(stdErr string, fileLocation string) string {
+	indexSlash := strings.LastIndex(fileLocation, "/") + 1
+	stdErr = strings.ReplaceAll(stdErr, fileLocation, fileLocation[indexSlash:])
+	return stdErr
 }
 
 func createFileAndAddCode(outFileName string, code string) error {

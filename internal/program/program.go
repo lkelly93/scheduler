@@ -1,4 +1,4 @@
-//Pacakge program represents a program written in a generic language.
+//Package program represents a program written in a generic language.
 //This package can run the given program and return the result
 package program
 
@@ -20,18 +20,18 @@ type Executable interface {
 
 //Program represents a Program that needs to be run
 type program struct {
-	code            string
-	neededFunctions *runner.NeededFunctions
+	code       string
+	createFile runner.FileCreationFunctor
 }
 
 //NewExecutable creates a new executable and then return it.
 //If the given language is not supported NewProgram will throw an error.
 func NewExecutable(lang string, code string) (Executable, error) {
-	neededFunctions := runner.GetNeededFunctions(lang)
-	if neededFunctions != nil {
+	createFileFunctor := runner.GetCreateFileFunctor(lang)
+	if createFileFunctor != nil {
 		prog := program{
-			code:            code,
-			neededFunctions: neededFunctions,
+			code:       code,
+			createFile: createFileFunctor,
 		}
 		return &prog, nil
 	}
@@ -44,7 +44,7 @@ func NewExecutable(lang string, code string) (Executable, error) {
 //run was successful
 func (prog *program) Run() string {
 	//Create the file and get the data to run it
-	sysCommand, fileLocation := prog.neededFunctions.Creator(prog.code)
+	sysCommand, fileLocation := prog.createFile(prog.code)
 	//Remove the old files
 	defer os.Remove(fileLocation)
 
@@ -60,7 +60,7 @@ func (prog *program) Run() string {
 	//Run the command and get the stdOut/stdErr
 	err := command.Run()
 	if err != nil {
-		return prog.neededFunctions.ParserErr(stErr.String())
+		return runner.RemoveFilePath(stErr.String(), fileLocation)
 	}
 
 	return string(stOut.String())

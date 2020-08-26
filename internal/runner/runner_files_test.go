@@ -40,9 +40,9 @@ func TestIsSupportedLangaugeGood(t *testing.T) {
 }
 
 func genericCreateFile(lang string, code string, expected string, t *testing.T) {
-	runnerFileFunctor := runner.GetNeededFunctions(lang)
+	createFileFunction := runner.GetCreateFileFunctor(lang)
 
-	sysCommand, fileLocation := runnerFileFunctor.Creator(code)
+	sysCommand, fileLocation := createFileFunction(code)
 	defer os.Remove(fileLocation)
 
 	actual := sysCommand + " " + fileLocation

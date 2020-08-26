@@ -30,7 +30,7 @@ func TestRunPythonCode(t *testing.T) {
 
 func TestRunBadPythonCode(t *testing.T) {
 	prog, _ := program.NewExecutable("python", "print('Hi")
-	expected := "Error on line number 1\n" +
+	expected := "  File \"PythonRunner.py\", line 1\n" +
 		"    print('Hi\n" +
 		"            ^\n" +
 		"SyntaxError: EOL while scanning string literal\n"
@@ -48,7 +48,7 @@ func TestRunJavaCode(t *testing.T) {
 
 func TestRunBadJavaCode(t *testing.T) {
 	prog, _ := program.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
-	expected := "Error on line number 3\n" +
+	expected := "JavaRunner.java:3: error: ';' expected\n" +
 		"public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
 		"                                                                        ^\n" +
 		"1 error\n" +
