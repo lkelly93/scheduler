@@ -13,8 +13,8 @@ func createRunnerFileJava(code string) (string, string) {
 	outFileName := getRunnerFileLocation("JavaRunner.java")
 
 	var formattedCode strings.Builder
-	formattedCode.WriteString("import java.util.*;")
-	formattedCode.WriteString("public class JavaRunner{")
+	formattedCode.WriteString("import java.util.*;\n")
+	formattedCode.WriteString("public class JavaRunner{\n")
 	formattedCode.WriteString(code)
 	formattedCode.WriteString("}")
 

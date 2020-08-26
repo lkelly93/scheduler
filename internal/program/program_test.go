@@ -48,9 +48,9 @@ func TestRunJavaCode(t *testing.T) {
 
 func TestRunBadJavaCode(t *testing.T) {
 	prog, _ := program.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
-	expected := "Error on line number 1\n" +
-		"import java.util.*;public class JavaRunner{public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
-		"                                                                                                                   ^\n" +
+	expected := "Error on line number 3\n" +
+		"public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
+		"                                                                        ^\n" +
 		"1 error\n" +
 		"error: compilation failed\n"
 
