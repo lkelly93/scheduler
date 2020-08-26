@@ -6,14 +6,14 @@ import (
 	"github.com/lkelly93/scheduler/internal/program"
 )
 
-func TestNewProgram(t *testing.T) {
+func TestNewExecutable(t *testing.T) {
 	_, err := program.NewExecutable("python", "print('Hello World')")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestNewProgramFail(t *testing.T) {
+func TestNewExecutableFail(t *testing.T) {
 	_, err := program.NewExecutable("Not a Language", "Not Code")
 	if err == nil {
 		t.Errorf("This test should of failed but it didn't")

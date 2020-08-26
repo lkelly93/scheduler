@@ -23,6 +23,22 @@ func TestJavaCreateFile(t *testing.T) {
 	genericCreateFile(lang, code, expected, t)
 }
 
+func TestIsSupportedLangaugeBad(t *testing.T) {
+	lang := "Not a language"
+
+	if runner.IsSupportedLanguage(lang) {
+		t.Errorf("Returned that \"%s\" was a supported language, when it should not.", lang)
+	}
+}
+
+func TestIsSupportedLangaugeGood(t *testing.T) {
+	lang := "python"
+
+	if !runner.IsSupportedLanguage(lang) {
+		t.Errorf("Returned that \"%s\" was not a supported language, when it is.", lang)
+	}
+}
+
 func genericCreateFile(lang string, code string, expected string, t *testing.T) {
 	runnerFileFunctor := runner.GetNeededFunctions(lang)
 
