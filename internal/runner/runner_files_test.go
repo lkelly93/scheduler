@@ -24,16 +24,14 @@ func TestJavaCreateFile(t *testing.T) {
 }
 
 func genericCreateFile(lang string, code string, expected string, t *testing.T) {
-	runnerFileFunctor := runner.GetFunctor(lang)
+	runnerFileFunctor := runner.GetNeededFunctions(lang)
 
-	sysCommand, fileLocation := runnerFileFunctor(code)
+	sysCommand, fileLocation := runnerFileFunctor.Creator(code)
+	defer os.Remove(fileLocation)
 
 	actual := sysCommand + " " + fileLocation
 
 	assertEquals(expected, actual, t)
-
-	os.Remove(fileLocation)
-
 }
 
 /****** Supporting Methods ******/

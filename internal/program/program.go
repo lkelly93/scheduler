@@ -20,9 +20,8 @@ type Executable interface {
 
 //Program represents a Program that needs to be run
 type program struct {
-	code               string
-	createFileFunctor  runner.FileCreationFunctor
-	ParseStdErrFunctor runner.StandardErrParserFunctor
+	code            string
+	neededFunctions *runner.NeededFunctions
 }
 
 //NewExecutable creates a new executable and then return it.
@@ -31,9 +30,8 @@ func NewExecutable(lang string, code string) (Executable, error) {
 	neededFunctions := runner.GetNeededFunctions(lang)
 	if neededFunctions != nil {
 		prog := program{
-			code:               code,
-			createFileFunctor:  neededFunctions.Creator,
-			ParseStdErrFunctor: neededFunctions.Parser,
+			code:            code,
+			neededFunctions: neededFunctions,
 		}
 		return &prog, nil
 	}
@@ -46,7 +44,7 @@ func NewExecutable(lang string, code string) (Executable, error) {
 //run was successful
 func (prog *program) Run() string {
 	//Create the file and get the data to run it
-	sysCommand, fileLocation := prog.createFileFunctor(prog.code)
+	sysCommand, fileLocation := prog.neededFunctions.Creator(prog.code)
 	//Remove the old files
 	defer os.Remove(fileLocation)
 
@@ -62,7 +60,7 @@ func (prog *program) Run() string {
 	//Run the command and get the stdOut/stdErr
 	err := command.Run()
 	if err != nil {
-		return prog.ParseStdErrFunctor(stErr.String())
+		return prog.neededFunctions.ParserErr(stErr.String())
 	}
 
 	return string(stOut.String())

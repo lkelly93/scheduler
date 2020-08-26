@@ -19,18 +19,18 @@ type StandardErrParserFunctor func(string) string
 //NeededFunctions holds all the functions needed for the execution
 //of executable
 type NeededFunctions struct {
-	Creator FileCreationFunctor
-	Parser  StandardErrParserFunctor
+	Creator   FileCreationFunctor
+	ParserErr StandardErrParserFunctor
 }
 
 var supportedLanguages = map[string]NeededFunctions{
 	"python": NeededFunctions{
-		Creator: createRunnerFilePython,
-		Parser:  parsePythonStandardErr,
+		Creator:   createRunnerFilePython,
+		ParserErr: parsePythonStandardErr,
 	},
 	"java": NeededFunctions{
-		Creator: createRunnerFileJava,
-		Parser:  parseJavaStandardErr,
+		Creator:   createRunnerFileJava,
+		ParserErr: parseJavaStandardErr,
 	},
 }
 
