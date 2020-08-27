@@ -31,14 +31,14 @@ var supportedLanguages = map[string]fileData{
 	"python": fileData{
 		createFileFunctor: createRunnerFilePython,
 		settings: HandlerSettings{
-			className: "PythonRunner",
+			ClassName: "PythonRunner",
 		},
 	},
 	"java": fileData{
 		createFileFunctor: createRunnerFileJava,
 		settings: HandlerSettings{
-			leadingCode: "import java.util.*;",
-			className:   "JavaRunner",
+			LeadingCode: "import java.util.*;",
+			ClassName:   "JavaRunner",
 		},
 	},
 }

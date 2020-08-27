@@ -8,7 +8,7 @@ import (
 //Java creates a runnerFile for java languages.
 func createRunnerFileJava(code string, settings *HandlerSettings) (string, string) {
 	langCommand := "java"
-	outFileName := getRunnerFileLocation(settings.className + ".java")
+	outFileName := getRunnerFileLocation(settings.ClassName + ".java")
 
 	var formattedCode strings.Builder
 	header(&formattedCode, settings)
@@ -24,15 +24,15 @@ func createRunnerFileJava(code string, settings *HandlerSettings) (string, strin
 }
 
 func header(formattedCode *strings.Builder, settings *HandlerSettings){
-	formattedCode.WriteString(settings.leadingCode)
+	formattedCode.WriteString(settings.LeadingCode)
 	formattedCode.WriteString("\n")
 	formattedCode.WriteString("public class ")
-	formattedCode.WriteString(settings.className)
+	formattedCode.WriteString(settings.ClassName)
 	formattedCode.WriteString("{\n")
 }
 
 func footer(formattedCode *strings.Builder, settings *HandlerSettings){
 	formattedCode.WriteString("\n")
-	formattedCode.WriteString(settings.trailingCode)
+	formattedCode.WriteString(settings.TrailingCode)
 	formattedCode.WriteString("\n}")
 }
