@@ -1,6 +1,6 @@
 //Package program represents a program written in a generic language.
 //This package can run the given program and return the result
-package program
+package executable
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/lkelly93/scheduler/internal/runner"
+	"github.com/lkelly93/scheduler/internal/handler"
 )
 
 //Executable represents program that is ready to execute
@@ -20,18 +20,18 @@ type Executable interface {
 
 //Program represents a Program that needs to be run
 type program struct {
-	code       string
-	createFile runner.FileCreationFunctor
+	code     string
+	handler handler.FileHandler
 }
 
 //NewExecutable creates a new executable and then return it.
 //If the given language is not supported NewProgram will throw an error.
 func NewExecutable(lang string, code string) (Executable, error) {
-	createFileFunctor := runner.GetCreateFileFunctor(lang)
-	if createFileFunctor != nil {
+	handler := handler.GetFileHandler(lang, nil)
+	if handler != nil {
 		prog := program{
-			code:       code,
-			createFile: createFileFunctor,
+			code:     code,
+			handler: handler,
 		}
 		return &prog, nil
 	}
@@ -44,7 +44,7 @@ func NewExecutable(lang string, code string) (Executable, error) {
 //run was successful
 func (prog *program) Run() string {
 	//Create the file and get the data to run it
-	sysCommand, fileLocation := prog.createFile(prog.code)
+	sysCommand, fileLocation := prog.handler.CreateRunnerFile(prog.code)
 	//Remove the old files
 	defer os.Remove(fileLocation)
 
@@ -60,7 +60,7 @@ func (prog *program) Run() string {
 	//Run the command and get the stdOut/stdErr
 	err := command.Run()
 	if err != nil {
-		return runner.RemoveFilePath(stErr.String(), fileLocation)
+		return handler.RemoveFilePath(stErr.String(), fileLocation)
 	}
 
 	return string(stOut.String())

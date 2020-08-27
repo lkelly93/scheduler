@@ -1,20 +1,20 @@
-package program_test
+package executable_test
 
 import (
 	"testing"
 
-	"github.com/lkelly93/scheduler/internal/program"
+	"github.com/lkelly93/scheduler/internal/executable"
 )
 
 func TestNewExecutable(t *testing.T) {
-	_, err := program.NewExecutable("python", "print('Hello World')")
+	_, err := executable.NewExecutable("python", "print('Hello World')")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestNewExecutableFail(t *testing.T) {
-	_, err := program.NewExecutable("Not a Language", "Not Code")
+	_, err := executable.NewExecutable("Not a Language", "Not Code")
 	if err == nil {
 		t.Errorf("This test should of failed but it didn't")
 	}
@@ -23,13 +23,13 @@ func TestNewExecutableFail(t *testing.T) {
 /****** Python Tests******/
 
 func TestRunPythonCode(t *testing.T) {
-	prog, _ := program.NewExecutable("python", "print('Hello World')")
+	prog, _ := executable.NewExecutable("python", "print('Hello World')")
 	expected := "Hello World\n"
 	genericRunCode(prog, expected, t)
 }
 
 func TestRunBadPythonCode(t *testing.T) {
-	prog, _ := program.NewExecutable("python", "print('Hi")
+	prog, _ := executable.NewExecutable("python", "print('Hi")
 	expected := "  File \"PythonRunner.py\", line 1\n" +
 		"    print('Hi\n" +
 		"            ^\n" +
@@ -41,31 +41,34 @@ func TestRunBadPythonCode(t *testing.T) {
 /****** Java Tests******/
 
 func TestRunJavaCode(t *testing.T) {
-	prog, _ := program.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
+	prog, _ := executable.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\");}")
 	expected := "Hello World\n"
 	genericRunCode(prog, expected, t)
 }
 
 func TestRunBadJavaCode(t *testing.T) {
-	prog, _ := program.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\")}")
+	prog, _ := executable.NewExecutable("java", "public static void main(String[] args){System.out.println(\"Hello World\")")
 	expected := "JavaRunner.java:3: error: ';' expected\n" +
-		"public static void main(String[] args){System.out.println(\"Hello World\")}}\n" +
+		"public static void main(String[] args){System.out.println(\"Hello World\")\n" +
 		"                                                                        ^\n" +
-		"1 error\n" +
+		"JavaRunner.java:5: error: reached end of file while parsing\n" +
+		"}\n" +
+		" ^\n" +
+		"2 errors\n" +
 		"error: compilation failed\n"
 
 	genericRunBadCode(prog, expected, t)
 
 }
 
-func genericRunCode(prog program.Executable, expected string, t *testing.T) {
+func genericRunCode(prog executable.Executable, expected string, t *testing.T) {
 	actual := prog.Run()
 
 	//TODO:Check if the file was properly deleted
 	assertEquals(expected, actual, t)
 }
 
-func genericRunBadCode(prog program.Executable, expected string, t *testing.T) {
+func genericRunBadCode(prog executable.Executable, expected string, t *testing.T) {
 	actual := prog.Run()
 	assertEquals(expected, actual, t)
 }
