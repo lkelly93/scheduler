@@ -15,9 +15,9 @@ type FileHandler interface {
 
 //HandlerSettings are all the settings for a Handler
 type HandlerSettings struct {
-	leadingCode  string
-	className    string
-	trailingCode string
+	LeadingCode  string
+	ClassName    string
+	TrailingCode string
 }
 
 type fileData struct {
