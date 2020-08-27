@@ -1,10 +1,10 @@
-package runner_test
+package handler_test
 
 import (
 	"os"
 	"testing"
 
-	"github.com/lkelly93/scheduler/internal/runner"
+	"github.com/lkelly93/scheduler/internal/handler"
 )
 
 func TestPythonCreateFile(t *testing.T) {
@@ -23,26 +23,10 @@ func TestJavaCreateFile(t *testing.T) {
 	genericCreateFile(lang, code, expected, t)
 }
 
-func TestIsSupportedLangaugeBad(t *testing.T) {
-	lang := "Not a language"
-
-	if runner.IsSupportedLanguage(lang) {
-		t.Errorf("Returned that \"%s\" was a supported language, when it should not.", lang)
-	}
-}
-
-func TestIsSupportedLangaugeGood(t *testing.T) {
-	lang := "python"
-
-	if !runner.IsSupportedLanguage(lang) {
-		t.Errorf("Returned that \"%s\" was not a supported language, when it is.", lang)
-	}
-}
-
 func genericCreateFile(lang string, code string, expected string, t *testing.T) {
-	createFileFunction := runner.GetCreateFileFunctor(lang)
+	createFileFunction := handler.GetFileHandler(lang, nil)
 
-	sysCommand, fileLocation := createFileFunction(code)
+	sysCommand, fileLocation := createFileFunction.CreateRunnerFile(code)
 	defer os.Remove(fileLocation)
 
 	actual := sysCommand + " " + fileLocation
