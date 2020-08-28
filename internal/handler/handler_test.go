@@ -46,6 +46,7 @@ func TestRemoveFilePath(t *testing.T) {
 	assertEquals(expected, actual, t)
 }
 
+/****** Supporting Methods ******/
 func genericCreateFile(lang string, code string, expected string, t *testing.T) {
 	createFileFunction := handler.GetFileHandler(lang, nil)
 
@@ -57,7 +58,6 @@ func genericCreateFile(lang string, code string, expected string, t *testing.T) 
 	assertEquals(expected, actual, t)
 }
 
-/****** Supporting Methods ******/
 func assertEquals(expected string, actual string, t *testing.T) {
 	if actual != expected {
 		i := 0
