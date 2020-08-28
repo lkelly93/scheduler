@@ -23,6 +23,29 @@ func TestJavaCreateFile(t *testing.T) {
 	genericCreateFile(lang, code, expected, t)
 }
 
+func TestCreateRunnerFile(t *testing.T) {
+	lang := "python"
+	code := "print('Hello World')"
+
+	createFileFunction := handler.GetFileHandler(lang, nil)
+	_, fileLocation := createFileFunction.CreateRunnerFile(code)
+	defer os.Remove(fileLocation)
+
+	_, err := os.Stat(fileLocation)
+	if err != nil {
+		t.Errorf("%s file was not created", fileLocation)
+	}
+}
+
+func TestRemoveFilePath(t *testing.T) {
+	message := "/path/to/runner/file/PythonRunner.py had an error Python();<_aRunner.py"
+	expected := "PythonRunner.py had an error Python();<_aRunner.py"
+	mockFilePath := "/path/to/runner/file/PythonRunner.py"
+	actual := handler.RemoveFilePath(message, mockFilePath)
+
+	assertEquals(expected, actual, t)
+}
+
 func genericCreateFile(lang string, code string, expected string, t *testing.T) {
 	createFileFunction := handler.GetFileHandler(lang, nil)
 

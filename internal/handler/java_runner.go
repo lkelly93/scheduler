@@ -11,9 +11,9 @@ func createRunnerFileJava(code string, settings *HandlerSettings) (string, strin
 	outFileName := getRunnerFileLocation(settings.ClassName + ".java")
 
 	var formattedCode strings.Builder
-	header(&formattedCode, settings)
+	insertImportsJava(&formattedCode, settings)
 	formattedCode.WriteString(code)
-	footer(&formattedCode, settings)
+	insertTrailingCodeJava(&formattedCode, settings)
 
 	err := createFileAndAddCode(outFileName, formattedCode.String())
 
@@ -23,15 +23,15 @@ func createRunnerFileJava(code string, settings *HandlerSettings) (string, strin
 	return langCommand, outFileName
 }
 
-func header(formattedCode *strings.Builder, settings *HandlerSettings){
-	formattedCode.WriteString(settings.LeadingCode)
+func insertImportsJava(formattedCode *strings.Builder, settings *HandlerSettings) {
+	formattedCode.WriteString(settings.Imports)
 	formattedCode.WriteString("\n")
 	formattedCode.WriteString("public class ")
 	formattedCode.WriteString(settings.ClassName)
 	formattedCode.WriteString("{\n")
 }
 
-func footer(formattedCode *strings.Builder, settings *HandlerSettings){
+func insertTrailingCodeJava(formattedCode *strings.Builder, settings *HandlerSettings) {
 	formattedCode.WriteString("\n")
 	formattedCode.WriteString(settings.TrailingCode)
 	formattedCode.WriteString("\n}")
