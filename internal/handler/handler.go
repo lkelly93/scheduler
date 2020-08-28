@@ -1,4 +1,4 @@
-//Package runner supports the creation of runner files for languages.
+//Package handler supports the creation of runner files for executables.
 //A runner file is a file properly formatted in a given language that can be
 //executed by the program package.
 package handler
@@ -15,7 +15,7 @@ type FileHandler interface {
 
 //HandlerSettings are all the settings for a Handler
 type HandlerSettings struct {
-	LeadingCode  string
+	Imports      string
 	ClassName    string
 	TrailingCode string
 }
@@ -31,14 +31,15 @@ var supportedLanguages = map[string]fileData{
 	"python": fileData{
 		createFileFunctor: createRunnerFilePython,
 		settings: HandlerSettings{
+			Imports:   "import numpy as np",
 			ClassName: "PythonRunner",
 		},
 	},
 	"java": fileData{
 		createFileFunctor: createRunnerFileJava,
 		settings: HandlerSettings{
-			LeadingCode: "import java.util.*;",
-			ClassName:   "JavaRunner",
+			Imports:   "import java.util.*;",
+			ClassName: "JavaRunner",
 		},
 	},
 }
@@ -56,6 +57,9 @@ func GetFileHandler(lang string, settings *HandlerSettings) FileHandler {
 	return nil
 }
 
+//CreateRunnerFile creates a runner file from the given FileHandler,
+//it returns the system command required to run the file, and then then the file
+//to be run.
 func (data *fileData) CreateRunnerFile(code string) (string, string) {
 	return data.createFileFunctor(code, &data.settings)
 }
@@ -67,6 +71,7 @@ func RemoveFilePath(stdErr string, fileLocation string) string {
 	return stdErr
 }
 
+/***** Supporing Methods ******/
 func createFileAndAddCode(outFileName string, code string) error {
 	runnerFile, err := os.Create(outFileName)
 	if err == nil {

@@ -4,11 +4,12 @@ package executable
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+	"time"
 
 	"github.com/lkelly93/scheduler/internal/handler"
 )
@@ -20,7 +21,7 @@ type Executable interface {
 
 //Program represents a Program that needs to be run
 type program struct {
-	code     string
+	code    string
 	handler handler.FileHandler
 }
 
@@ -30,7 +31,7 @@ func NewExecutable(lang string, code string) (Executable, error) {
 	handler := handler.GetFileHandler(lang, nil)
 	if handler != nil {
 		prog := program{
-			code:     code,
+			code:    code,
 			handler: handler,
 		}
 		return &prog, nil
@@ -43,13 +44,20 @@ func NewExecutable(lang string, code string) (Executable, error) {
 //Run returns the result of the run and the err message. If err == nil then the
 //run was successful
 func (prog *program) Run() string {
+	timeoutInSeconds := 15
 	//Create the file and get the data to run it
 	sysCommand, fileLocation := prog.handler.CreateRunnerFile(prog.code)
 	//Remove the old files
 	defer os.Remove(fileLocation)
 
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		time.Duration(15)*time.Second)
+
+	defer cancel()
+
 	//Get the system resources to run the command
-	command := exec.Command(sysCommand, fileLocation)
+	command := exec.CommandContext(ctx, sysCommand, fileLocation)
 
 	var stOut bytes.Buffer
 	var stErr bytes.Buffer
@@ -59,14 +67,12 @@ func (prog *program) Run() string {
 
 	//Run the command and get the stdOut/stdErr
 	err := command.Run()
+	if ctx.Err() == context.DeadlineExceeded {
+		return fmt.Sprintf("Time Limit Exceeded %ds", timeoutInSeconds)
+	}
 	if err != nil {
 		return handler.RemoveFilePath(stErr.String(), fileLocation)
 	}
 
 	return string(stOut.String())
-}
-
-func generateErrOut(extension string, errorMessage string) string {
-	indexOfExtension := strings.Index(errorMessage, extension)
-	return errorMessage[indexOfExtension:]
 }
