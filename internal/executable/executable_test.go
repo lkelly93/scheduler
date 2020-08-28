@@ -91,7 +91,6 @@ func TestFileIsDeletedAfter(t *testing.T) {
 	fileLocation := "../runner_files/PythonRunner.py"
 	_, err := os.Stat(fileLocation)
 	if err == nil {
-		t.Errorf(err.Error())
 		t.Fatalf("%s existed before Run() was called", fileLocation)
 	}
 
@@ -99,7 +98,6 @@ func TestFileIsDeletedAfter(t *testing.T) {
 
 	_, err = os.Stat(fileLocation)
 	if err == nil {
-		t.Errorf(err.Error())
 		t.Errorf("%s still exist after Run() was called. It should of been deleted", fileLocation)
 	}
 }

@@ -71,7 +71,7 @@ func RemoveFilePath(stdErr string, fileLocation string) string {
 	return stdErr
 }
 
-/***** Supporing Methods ******/
+/***** Supporting Methods ******/
 func createFileAndAddCode(outFileName string, code string) error {
 	runnerFile, err := os.Create(outFileName)
 	if err == nil {
