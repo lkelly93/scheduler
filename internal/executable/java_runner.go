@@ -1,4 +1,4 @@
-package handler
+package executable
 
 import (
 	"log"
@@ -6,7 +6,8 @@ import (
 )
 
 //Java creates a runnerFile for java languages.
-func createRunnerFileJava(code string, settings *HandlerSettings) (string, string) {
+func createRunnerFileJava(code string, settings *FileSettings) (string, string) {
+	settings = fillRestOfFileSettings("java", settings)
 	langCommand := "java"
 	outFileName := getRunnerFileLocation(settings.ClassName + ".java")
 
@@ -23,7 +24,7 @@ func createRunnerFileJava(code string, settings *HandlerSettings) (string, strin
 	return langCommand, outFileName
 }
 
-func insertImportsJava(formattedCode *strings.Builder, settings *HandlerSettings) {
+func insertImportsJava(formattedCode *strings.Builder, settings *FileSettings) {
 	formattedCode.WriteString(settings.Imports)
 	formattedCode.WriteString("\n")
 	formattedCode.WriteString("public class ")
@@ -31,7 +32,7 @@ func insertImportsJava(formattedCode *strings.Builder, settings *HandlerSettings
 	formattedCode.WriteString("{\n")
 }
 
-func insertTrailingCodeJava(formattedCode *strings.Builder, settings *HandlerSettings) {
+func insertTrailingCodeJava(formattedCode *strings.Builder, settings *FileSettings) {
 	formattedCode.WriteString("\n")
 	formattedCode.WriteString(settings.TrailingCode)
 	formattedCode.WriteString("\n}")
