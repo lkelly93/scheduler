@@ -15,7 +15,7 @@ func TestNewExecutable(t *testing.T) {
 		t.Error(err)
 	}
 
-	//Cast Executable interface to program struct pointer
+	//Cast Executable interface to state struct
 	state := exe.(*executableState)
 
 	assertEquals(code, state.code, t)
