@@ -9,6 +9,9 @@ import (
 func createRunnerFilePython(code string, settings *FileSettings) (string, string) {
 	settings = fillRestOfFileSettings("python", settings)
 	langCommand := "python3"
+	var fileName strings.Builder
+	fileName.WriteString(settings.FileNamePrefix)
+	fileName.WriteString(settings.ClassName)
 	outFileName := getRunnerFileLocation(settings.ClassName + ".py")
 
 	var formattedCode strings.Builder

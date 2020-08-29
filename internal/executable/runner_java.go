@@ -9,6 +9,9 @@ import (
 func createRunnerFileJava(code string, settings *FileSettings) (string, string) {
 	settings = fillRestOfFileSettings("java", settings)
 	langCommand := "java"
+	var fileName strings.Builder
+	fileName.WriteString(settings.FileNamePrefix)
+	fileName.WriteString(settings.ClassName)
 	outFileName := getRunnerFileLocation(settings.ClassName + ".java")
 
 	var formattedCode strings.Builder

@@ -10,6 +10,10 @@ type FileSettings struct {
 	Imports      string
 	ClassName    string
 	TrailingCode string
+	//FileNamePrefix is the will be put in front of the class name. Only needed if
+	//you are planning on running multiple executable in parallel and want to
+	//prevent against data races. Defaults to empty string
+	FileNamePrefix string
 }
 
 //executableState holds the state of an Executable
@@ -20,3 +24,23 @@ type executableState struct {
 }
 
 type fileCreationFunction func(string, *FileSettings) (string, string)
+
+var supportedLanguages = map[string]fileCreationFunction{
+	"python": createRunnerFilePython,
+	"java":   createRunnerFileJava,
+}
+
+var fileSettingsDefaults = map[string]FileSettings{
+	"python": FileSettings{
+		Imports:        "import numpy as np",
+		ClassName:      "PythonRunner",
+		TrailingCode:   "",
+		FileNamePrefix: "",
+	},
+	"java": FileSettings{
+		Imports:        "import java.util.*;",
+		ClassName:      "JavaRunner",
+		TrailingCode:   "",
+		FileNamePrefix: "",
+	},
+}

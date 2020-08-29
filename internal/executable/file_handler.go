@@ -5,24 +5,6 @@ import (
 	"strings"
 )
 
-var supportedLanguages = map[string]fileCreationFunction{
-	"python": createRunnerFilePython,
-	"java":   createRunnerFileJava,
-}
-
-var fileSettingsDefaults = map[string]FileSettings{
-	"python": FileSettings{
-		Imports:      "import numpy as np",
-		ClassName:    "PythonRunner",
-		TrailingCode: "",
-	},
-	"java": FileSettings{
-		Imports:      "import java.util.*;",
-		ClassName:    "JavaRunner",
-		TrailingCode: "",
-	},
-}
-
 //getFileHandler returns a FileHandler for the given language.
 func getFileCreationFunction(lang string) fileCreationFunction {
 	function, found := supportedLanguages[lang]
@@ -75,9 +57,9 @@ func createFileAndAddCode(outFileName string, code string) error {
 
 //getRunnerFileLocation returns a the string used to create the file runner in
 //the system.
-func getRunnerFileLocation(suffix string) string {
+func getRunnerFileLocation(fileName string) string {
 	var location strings.Builder
 	location.WriteString("../runner_files/")
-	location.WriteString(suffix)
+	location.WriteString(fileName)
 	return location.String()
 }

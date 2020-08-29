@@ -14,6 +14,23 @@ func TestPythonCreateFile(t *testing.T) {
 	genericCreateFile(lang, code, expected, t)
 }
 
+func TestPythonCreateFileCustomFileSettings(t *testing.T) {
+	lang := "python"
+	code := "print('Hello World')"
+	fileSettings := FileSettings{
+		Imports:        "import math",
+		ClassName:      "SillyName",
+		TrailingCode:   "print('Trailing Code')",
+		FileNamePrefix: "PREFIX",
+	}
+	expectedRunnerFile := "python3 ../runner_files/PREFIXSillyName.py"
+
+	function := getFileCreationFunction(lang)
+	sysCommand, fileLocation := function(code, &fileSettings)
+
+	assertEquals(expectedRunnerFile, fileLocation, t)
+}
+
 func TestJavaCreateFile(t *testing.T) {
 	lang := "java"
 	code := "public static void main(String[] args){System.out.println(\"Hello World\");}"
@@ -48,27 +65,31 @@ func TestRemoveFilePath(t *testing.T) {
 func TestAllSupportedDefaultSettingsJava(t *testing.T) {
 	actual := fileSettingsDefaults["java"]
 	expected := FileSettings{
-		Imports:      "import java.util.*;",
-		ClassName:    "JavaRunner",
-		TrailingCode: "",
+		Imports:        "import java.util.*;",
+		ClassName:      "JavaRunner",
+		TrailingCode:   "",
+		FileNamePrefix: "",
 	}
 
 	assertEquals(expected.Imports, actual.Imports, t)
 	assertEquals(expected.ClassName, actual.ClassName, t)
 	assertEquals(expected.TrailingCode, actual.TrailingCode, t)
+	assertEquals(expected.FileNamePrefix, actual.FileNamePrefix, t)
 }
 
 func TestAllSupportedDefaultSettingsPython(t *testing.T) {
 	actual := fileSettingsDefaults["python"]
 	expected := FileSettings{
-		Imports:      "import numpy as np",
-		ClassName:    "PythonRunner",
-		TrailingCode: "",
+		Imports:        "import numpy as np",
+		ClassName:      "PythonRunner",
+		TrailingCode:   "",
+		FileNamePrefix: "",
 	}
 
 	assertEquals(expected.Imports, actual.Imports, t)
 	assertEquals(expected.ClassName, actual.ClassName, t)
 	assertEquals(expected.TrailingCode, actual.TrailingCode, t)
+	assertEquals(expected.FileNamePrefix, actual.FileNamePrefix, t)
 }
 
 func TestCreateFileAndAddCode(t *testing.T) {
@@ -92,7 +113,6 @@ func TestCreateFileAndAddCode(t *testing.T) {
 	if fileText != code {
 		t.Errorf("Runner file text was not correct.")
 	}
-
 }
 
 func TestGetRunnerFileLocation(t *testing.T) {
