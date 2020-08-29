@@ -1,6 +1,7 @@
 package executable
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -40,6 +41,65 @@ func TestRemoveFilePath(t *testing.T) {
 	expected := "PythonRunner.py had an error Python();<_aRunner.py"
 	mockFilePath := "/path/to/runner/file/PythonRunner.py"
 	actual := removeFilePath(message, mockFilePath)
+
+	assertEquals(expected, actual, t)
+}
+
+func TestAllSupportedDefaultSettingsJava(t *testing.T) {
+	actual := fileSettingsDefaults["java"]
+	expected := FileSettings{
+		Imports:      "import java.util.*;",
+		ClassName:    "JavaRunner",
+		TrailingCode: "",
+	}
+
+	assertEquals(expected.Imports, actual.Imports, t)
+	assertEquals(expected.ClassName, actual.ClassName, t)
+	assertEquals(expected.TrailingCode, actual.TrailingCode, t)
+}
+
+func TestAllSupportedDefaultSettingsPython(t *testing.T) {
+	actual := fileSettingsDefaults["python"]
+	expected := FileSettings{
+		Imports:      "import numpy as np",
+		ClassName:    "PythonRunner",
+		TrailingCode: "",
+	}
+
+	assertEquals(expected.Imports, actual.Imports, t)
+	assertEquals(expected.ClassName, actual.ClassName, t)
+	assertEquals(expected.TrailingCode, actual.TrailingCode, t)
+}
+
+func TestCreateFileAndAddCode(t *testing.T) {
+	outFile := "Test.txt"
+	code := "This is a test\n"
+
+	err := createFileAndAddCode(outFile, code)
+	defer os.Remove(outFile)
+
+	if err != nil {
+		t.Errorf("Could not create a runner file")
+	}
+
+	file, err := ioutil.ReadFile(outFile)
+	if err != nil {
+		t.Errorf("Couldn't open runner file after it was created.")
+	}
+
+	fileText := string(file)
+
+	if fileText != code {
+		t.Errorf("Runner file text was not correct.")
+	}
+
+}
+
+func TestGetRunnerFileLocation(t *testing.T) {
+	suffix := "Test.txt"
+	expected := "../runner_files/Test.txt"
+
+	actual := getRunnerFileLocation(suffix)
 
 	assertEquals(expected, actual, t)
 }

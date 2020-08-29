@@ -38,11 +38,11 @@ func TestRunPythonCode(t *testing.T) {
 
 func TestRunPythonCodeLonger(t *testing.T) {
 	fileLocation := "test_data/longPythonCode.py"
-	longCode, err := ioutil.ReadFile(fileLocation)
+	longCodeFile, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
 		t.Errorf("Could not read in %s", fileLocation)
 	}
-	code := string(longCode)
+	code := string(longCodeFile)
 	prog, _ := NewExecutable("python", code, nil)
 	expected := "Male\n"
 	genericRunCode(prog, expected, t)
