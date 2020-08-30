@@ -10,47 +10,88 @@ import (
 func TestNewExecutable(t *testing.T) {
 	lang := "python"
 	code := "print('Hello World')"
-	exe, err := NewExecutable(lang, code)
+	exe, err := NewExecutable(lang, code, nil)
 	if err != nil {
 		t.Error(err)
 	}
 
-	//Cast Executable interface to program struct pointer
-	programStruct := exe.(*program)
+	//Cast Executable interface to state struct
+	state := exe.(*executableState)
 
-	assertEquals(code, programStruct.code, t)
+	assertEquals(code, state.code, t)
 }
 
 func TestNewExecutableFail(t *testing.T) {
 	lang := "Not a Language"
-	_, err := NewExecutable(lang, "Not Code")
+	_, err := NewExecutable(lang, "Not Code", nil)
 	if err == nil {
 		t.Errorf("\"%s\" was accepted as a language and should not of been.", lang)
 	}
 }
 
-/***** Test Good Runs *****/
+// /***** Test Good Runs *****/
 func TestRunPythonCode(t *testing.T) {
-	prog, _ := NewExecutable("python", "print('Hello World')")
+	lang := "python"
+	code := "print('Hello World')"
+	prog, _ := NewExecutable(lang, code, nil)
 	expected := "Hello World\n"
 	genericRunCode(prog, expected, t)
 }
 
+func TestRunPythonCodeCustomFileSettings(t *testing.T) {
+	lang := "python"
+	code := "print(np.e)"
+
+	settings := FileSettings{
+		Imports:        "import math\nimport numpy as np",
+		ClassName:      "",
+		TrailingCode:   "print(math.tau)",
+		FileNamePrefix: "",
+	}
+	exec, _ := NewExecutable(lang, code, &settings)
+
+	actual := exec.Run()
+	expected := "2.718281828459045\n6.283185307179586\n"
+	assertEquals(expected, actual, t)
+}
+func TestRunJavaCodeCustomFileSettings(t *testing.T) {
+	lang := "java"
+	var code strings.Builder
+	code.WriteString("public static void main(String[] args){\n")
+	code.WriteString("HashMap<Integer,Integer> x = new HashMap<>();\n")
+	code.WriteString("x.put(5,4);\n")
+	code.WriteString("System.out.println(x.remove(5));\n")
+	code.WriteString("pi();\n")
+	code.WriteString("}\n")
+
+	settings := FileSettings{
+		Imports:        "import java.lang.*;\n import java.util.*;",
+		ClassName:      "",
+		TrailingCode:   "public static void pi(){System.out.println(Math.PI);}",
+		FileNamePrefix: "",
+	}
+	exec, _ := NewExecutable(lang, code.String(), &settings)
+
+	actual := exec.Run()
+	expected := "4\n3.141592653589793\n"
+	assertEquals(expected, actual, t)
+}
+
 func TestRunPythonCodeLonger(t *testing.T) {
 	fileLocation := "test_data/longPythonCode.py"
-	longCode, err := ioutil.ReadFile(fileLocation)
+	longCodeFile, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
 		t.Errorf("Could not read in %s", fileLocation)
 	}
-	code := string(longCode)
-	prog, _ := NewExecutable("python", code)
+	code := string(longCodeFile)
+	prog, _ := NewExecutable("python", code, nil)
 	expected := "Male\n"
 	genericRunCode(prog, expected, t)
 }
 
 func TestRunJavaCode(t *testing.T) {
 	code := "public static void main(String[] args){System.out.println(\"Hello World\");}"
-	prog, _ := NewExecutable("java", code)
+	prog, _ := NewExecutable("java", code, nil)
 	expected := "Hello World\n"
 	genericRunCode(prog, expected, t)
 }
@@ -62,7 +103,7 @@ func TestRunJavaCodeLonger(t *testing.T) {
 		t.Errorf("Could not read in %s", fileLocation)
 	}
 	code := string(longCode)
-	prog, _ := NewExecutable("java", code)
+	prog, _ := NewExecutable("java", code, nil)
 	var expected strings.Builder
 	expected.WriteString("NonRecursive\n")
 	expected.WriteString("[0, 1, 0, 0, 1, 0, 1, 0]\n")
@@ -77,7 +118,7 @@ func TestRecursion(t *testing.T) {
 		t.Errorf("Could not read in %s", fileLocation)
 	}
 	code := string(longCode)
-	prog, _ := NewExecutable("java", code)
+	prog, _ := NewExecutable("java", code, nil)
 	var expected strings.Builder
 	expected.WriteString("Recursive\n")
 	expected.WriteString("[0, 1, 0, 0, 1, 0, 1, 0]\n")
@@ -87,7 +128,7 @@ func TestRecursion(t *testing.T) {
 }
 
 func TestFileIsDeletedAfter(t *testing.T) {
-	prog, _ := NewExecutable("python", "print('Hello World')")
+	prog, _ := NewExecutable("python", "print('Hello World')", nil)
 	fileLocation := "../runner_files/PythonRunner.py"
 	_, err := os.Stat(fileLocation)
 	if err == nil {
@@ -102,10 +143,10 @@ func TestFileIsDeletedAfter(t *testing.T) {
 	}
 }
 
-//***** Test Bad Runs*****//
+/***** Test Bad Runs*****/
 func TestRunBadJavaCode(t *testing.T) {
 	code := "public static void main(String[] args){System.out.println(\"Hello World\")"
-	prog, _ := NewExecutable("java", code)
+	prog, _ := NewExecutable("java", code, nil)
 	expected := "JavaRunner.java:3: error: ';' expected\n" +
 		"public static void main(String[] args){System.out.println(\"Hello World\")\n" +
 		"                                                                        ^\n" +
@@ -120,7 +161,7 @@ func TestRunBadJavaCode(t *testing.T) {
 }
 
 func TestRunBadPythonCode(t *testing.T) {
-	prog, _ := NewExecutable("python", "print('Hi")
+	prog, _ := NewExecutable("python", "print('Hi", nil)
 	expected := "  File \"PythonRunner.py\", line 2\n" +
 		"    print('Hi\n" +
 		"            ^\n" +
@@ -139,22 +180,4 @@ func genericRunCode(prog Executable, expected string, t *testing.T) {
 func genericRunBadCode(prog Executable, expected string, t *testing.T) {
 	actual := prog.Run()
 	assertEquals(expected, actual, t)
-}
-
-func assertEquals(expected string, actual string, t *testing.T) {
-	if actual != expected {
-		i := 0
-		var expectedChar byte
-		var actualChar byte
-		for i < len(expected) && i < len(actual) {
-			if expected[i] != actual[i] {
-				expectedChar = expected[i]
-				actualChar = actual[i]
-				break
-			}
-			i++
-		}
-		t.Errorf("Expected \"%s\" but got \"%s\"", expected, actual)
-		t.Errorf("Error at index %d, expected %c but was %c", i, expectedChar, actualChar)
-	}
 }

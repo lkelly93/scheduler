@@ -1,4 +1,4 @@
-//Package program represents a program written in a generic language.
+//Package executable represents a program written in a generic language.
 //This package can run the given program and return the result
 package executable
 
@@ -10,43 +10,31 @@ import (
 	"os"
 	"os/exec"
 	"time"
-
-	"github.com/lkelly93/scheduler/internal/handler"
 )
 
-//Executable represents program that is ready to execute
-type Executable interface {
-	Run() string
-}
-
-//Program represents a Program that needs to be run
-type program struct {
-	code    string
-	handler handler.FileHandler
-}
-
-//NewExecutable creates a new executable and then return it.
+//NewExecutable creates a new executable with the given settings and code.
 //If the given language is not supported NewProgram will throw an error.
-func NewExecutable(lang string, code string) (Executable, error) {
-	handler := handler.GetFileHandler(lang, nil)
-	if handler != nil {
-		prog := program{
-			code:    code,
-			handler: handler,
+//If FileSettings is nil the default settings will be used for that language.
+func NewExecutable(lang string, code string, settings *FileSettings) (Executable, error) {
+	function := getFileCreationFunction(lang)
+	if function != nil {
+		state := executableState{
+			code:       code,
+			settings:   settings,
+			createFile: function,
 		}
-		return &prog, nil
+		return &state, nil
 	}
 	err := fmt.Sprintf("%s is not a supported language", lang)
 	return nil, errors.New(err)
 }
 
-//Run runs the given program and then returns the output from that given program
-//Run returns the result of the run and the err message. If err == nil then the
-//run was successful
-func (prog *program) Run() string {
+//Run runs the given program and then returns the output, this could be the
+//output from a successful run or the error message from an unsuccessful run.
+func (state *executableState) Run() string {
 	timeoutInSeconds := 15
 	//Create the file and get the data to run it
-	sysCommand, fileLocation := prog.handler.CreateRunnerFile(prog.code)
+	sysCommand, fileLocation := state.createFile(state.code, state.settings)
 	//Remove the old files
 	defer os.Remove(fileLocation)
 
@@ -71,7 +59,7 @@ func (prog *program) Run() string {
 		return fmt.Sprintf("Time Limit Exceeded %ds", timeoutInSeconds)
 	}
 	if err != nil {
-		return handler.RemoveFilePath(stErr.String(), fileLocation)
+		return removeFilePath(stErr.String(), fileLocation)
 	}
 
 	return string(stOut.String())

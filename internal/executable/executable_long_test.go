@@ -1,12 +1,10 @@
-//+build !longTests
+// +build !longTests
 
-package executable_test
+package executable
 
 import (
 	"strings"
 	"testing"
-
-	"github.com/lkelly93/scheduler/internal/executable"
 )
 
 func TestInfiniteRecursion(t *testing.T) {
@@ -20,7 +18,7 @@ func TestInfiniteRecursion(t *testing.T) {
 	code.WriteString("}else{")
 	code.WriteString("return x;\n")
 	code.WriteString("}}")
-	prog, err := executable.NewExecutable("java", code.String())
+	prog, err := NewExecutable("java", code.String(), nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -39,28 +37,10 @@ func TestInfiniteLoop(t *testing.T) {
 	code.WriteString("x = 5\n")
 	code.WriteString("while(True):\n")
 	code.WriteString("\tx+=1\n")
-	prog, _ := executable.NewExecutable("python", code.String())
+	prog, _ := NewExecutable("python", code.String(), nil)
 
 	actual := prog.Run()
 	expected := "Time Limit Exceeded 15s"
 
 	assertEquals(expected, actual, t)
-}
-
-func assertEquals(expected string, actual string, t *testing.T) {
-	if actual != expected {
-		i := 0
-		var expectedChar byte
-		var actualChar byte
-		for i < len(expected) && i < len(actual) {
-			if expected[i] != actual[i] {
-				expectedChar = expected[i]
-				actualChar = actual[i]
-				break
-			}
-			i++
-		}
-		t.Errorf("Expected \"%s\" but got \"%s\"", expected, actual)
-		t.Errorf("Error at index %d, expected %c but was %c", i, expectedChar, actualChar)
-	}
 }

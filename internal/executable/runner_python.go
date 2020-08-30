@@ -1,4 +1,4 @@
-package handler
+package executable
 
 import (
 	"log"
@@ -6,9 +6,14 @@ import (
 )
 
 //Python creates a runnerFile for python languages.
-func createRunnerFilePython(code string, settings *HandlerSettings) (string, string) {
+func createRunnerFilePython(code string, settings *FileSettings) (string, string) {
+	settings = fillRestOfFileSettings("python", settings)
 	langCommand := "python3"
-	outFileName := getRunnerFileLocation(settings.ClassName + ".py")
+	var fileName strings.Builder
+	fileName.WriteString(settings.FileNamePrefix)
+	fileName.WriteString(settings.ClassName)
+	fileName.WriteString(".py")
+	outFileName := getRunnerFileLocation(fileName.String())
 
 	var formattedCode strings.Builder
 	insertImportsPython(&formattedCode, settings)
@@ -23,12 +28,12 @@ func createRunnerFilePython(code string, settings *HandlerSettings) (string, str
 	return langCommand, outFileName
 }
 
-func insertImportsPython(formattedCode *strings.Builder, settings *HandlerSettings) {
+func insertImportsPython(formattedCode *strings.Builder, settings *FileSettings) {
 	formattedCode.WriteString(settings.Imports)
 	formattedCode.WriteString("\n")
 }
 
-func insertTrailingCodePython(formattedCode *strings.Builder, settings *HandlerSettings) {
+func insertTrailingCodePython(formattedCode *strings.Builder, settings *FileSettings) {
 	formattedCode.WriteString("\n")
 	formattedCode.WriteString(settings.TrailingCode)
 }
