@@ -12,7 +12,8 @@ func createRunnerFilePython(code string, settings *FileSettings) (string, string
 	var fileName strings.Builder
 	fileName.WriteString(settings.FileNamePrefix)
 	fileName.WriteString(settings.ClassName)
-	outFileName := getRunnerFileLocation(settings.ClassName + ".py")
+	fileName.WriteString(".py")
+	outFileName := getRunnerFileLocation(fileName.String())
 
 	var formattedCode strings.Builder
 	insertImportsPython(&formattedCode, settings)

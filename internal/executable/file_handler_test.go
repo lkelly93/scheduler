@@ -18,15 +18,33 @@ func TestPythonCreateFileCustomFileSettings(t *testing.T) {
 	lang := "python"
 	code := "print('Hello World')"
 	fileSettings := FileSettings{
-		Imports:        "import math",
-		ClassName:      "SillyName",
-		TrailingCode:   "print('Trailing Code')",
+		Imports:        "",
+		ClassName:      "SillyPythonName",
+		TrailingCode:   "",
 		FileNamePrefix: "PREFIX",
 	}
-	expectedRunnerFile := "python3 ../runner_files/PREFIXSillyName.py"
+	expectedRunnerFile := "../runner_files/PREFIXSillyPythonName.py"
 
 	function := getFileCreationFunction(lang)
-	sysCommand, fileLocation := function(code, &fileSettings)
+	_, fileLocation := function(code, &fileSettings)
+	os.Remove(fileLocation)
+
+	assertEquals(expectedRunnerFile, fileLocation, t)
+}
+func TestJavaCreateFileCustomFileSettings(t *testing.T) {
+	lang := "java"
+	code := "public static void main(String[] args){System.out.println(\"Hello World\");}"
+	fileSettings := FileSettings{
+		Imports:        "",
+		ClassName:      "SillyJavaName",
+		TrailingCode:   "",
+		FileNamePrefix: "PREFIX",
+	}
+	expectedRunnerFile := "../runner_files/PREFIXSillyJavaName.java"
+
+	function := getFileCreationFunction(lang)
+	_, fileLocation := function(code, &fileSettings)
+	os.Remove(fileLocation)
 
 	assertEquals(expectedRunnerFile, fileLocation, t)
 }

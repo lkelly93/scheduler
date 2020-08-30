@@ -31,9 +31,50 @@ func TestNewExecutableFail(t *testing.T) {
 
 // /***** Test Good Runs *****/
 func TestRunPythonCode(t *testing.T) {
-	prog, _ := NewExecutable("python", "print('Hello World')", nil)
+	lang := "python"
+	code := "print('Hello World')"
+	prog, _ := NewExecutable(lang, code, nil)
 	expected := "Hello World\n"
 	genericRunCode(prog, expected, t)
+}
+
+func TestRunPythonCodeCustomFileSettings(t *testing.T) {
+	lang := "python"
+	code := "print(np.e)"
+
+	settings := FileSettings{
+		Imports:        "import math\nimport numpy as np",
+		ClassName:      "",
+		TrailingCode:   "print(math.tau)",
+		FileNamePrefix: "",
+	}
+	exec, _ := NewExecutable(lang, code, &settings)
+
+	actual := exec.Run()
+	expected := "2.718281828459045\n6.283185307179586\n"
+	assertEquals(expected, actual, t)
+}
+func TestRunJavaCodeCustomFileSettings(t *testing.T) {
+	lang := "java"
+	var code strings.Builder
+	code.WriteString("public static void main(String[] args){\n")
+	code.WriteString("HashMap<Integer,Integer> x = new HashMap<>();\n")
+	code.WriteString("x.put(5,4);\n")
+	code.WriteString("System.out.println(x.remove(5));\n")
+	code.WriteString("pi();\n")
+	code.WriteString("}\n")
+
+	settings := FileSettings{
+		Imports:        "import java.lang.*;\n import java.util.*;",
+		ClassName:      "",
+		TrailingCode:   "public static void pi(){System.out.println(Math.PI);}",
+		FileNamePrefix: "",
+	}
+	exec, _ := NewExecutable(lang, code.String(), &settings)
+
+	actual := exec.Run()
+	expected := "4\n3.141592653589793\n"
+	assertEquals(expected, actual, t)
 }
 
 func TestRunPythonCodeLonger(t *testing.T) {
