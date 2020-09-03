@@ -30,6 +30,7 @@ func TestInfiniteRecursion(t *testing.T) {
 	newLineIndex := strings.Index(errorMessage, "\n") + 1
 	errorMessage = errorMessage[:newLineIndex]
 
+	assertRuntimeError(actual, t)
 	assertEquals(expected, errorMessage, t)
 }
 
@@ -43,5 +44,6 @@ func TestInfiniteLoop(t *testing.T) {
 	_, actual := prog.Run()
 	expected := "Time Limit Exceeded 15s"
 
+	assertTimeLimitError(actual, t)
 	assertEquals(expected, actual.Error(), t)
 }

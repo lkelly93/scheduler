@@ -24,6 +24,7 @@ func TestNewExecutable(t *testing.T) {
 func TestNewExecutableFail(t *testing.T) {
 	lang := "Not a Language"
 	_, err := NewExecutable(lang, "Not Code", nil)
+	assertUnsupportedLanguageError(err, t)
 	if err == nil {
 		t.Errorf("\"%s\" was accepted as a language and should not of been.", lang)
 	}
@@ -184,10 +185,6 @@ func genericRunCode(prog Executable, expected string, t *testing.T) {
 
 func genericRuntimeErrorTest(prog Executable, expected string, t *testing.T) {
 	_, actual := prog.Run()
-	_, ok := actual.(*RuntimeError)
-	if !ok {
-		t.Errorf("Expected RuntimeError but got %T", actual)
-		return
-	}
+	assertRuntimeError(actual, t)
 	assertEquals(expected, actual.Error(), t)
 }
