@@ -5,7 +5,6 @@ package executable
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -18,15 +17,15 @@ import (
 func NewExecutable(lang string, code string, settings *FileSettings) (Executable, error) {
 	function := getFileCreationFunction(lang)
 	if function != nil {
-		state := executableState{
+		return &executableState{
 			code:       code,
 			settings:   settings,
 			createFile: function,
-		}
-		return &state, nil
+		}, nil
 	}
-	err := fmt.Sprintf("%s is not a supported language", lang)
-	return nil, errors.New(err)
+	return nil, &UnsupportedLanguageError{
+		lang: lang,
+	}
 }
 
 //Run runs the given program and then returns the output, this could be the
