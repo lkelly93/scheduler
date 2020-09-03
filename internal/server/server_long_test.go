@@ -1,3 +1,5 @@
+// +build !longTests
+
 package server
 
 import (
