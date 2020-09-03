@@ -6,7 +6,7 @@ import (
 )
 
 //Python creates a runnerFile for python languages.
-func createRunnerFilePython(code string, settings *FileSettings) (string, string) {
+func createRunnerFilePython(code string, settings *FileSettings) (string, string, error) {
 	settings = fillRestOfFileSettings("python", settings)
 	langCommand := "python3"
 	var fileName strings.Builder
@@ -25,7 +25,7 @@ func createRunnerFilePython(code string, settings *FileSettings) (string, string
 	if err != nil {
 		log.Fatal("Could not create runner file!")
 	}
-	return langCommand, outFileName
+	return langCommand, outFileName, nil
 }
 
 func insertImportsPython(formattedCode *strings.Builder, settings *FileSettings) {

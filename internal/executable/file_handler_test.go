@@ -26,7 +26,7 @@ func TestPythonCreateFileCustomFileSettings(t *testing.T) {
 	expectedRunnerFile := "../runner_files/PREFIXSillyPythonName.py"
 
 	function := getFileCreationFunction(lang)
-	_, fileLocation := function(code, &fileSettings)
+	_, fileLocation, _ := function(code, &fileSettings)
 	os.Remove(fileLocation)
 
 	assertEquals(expectedRunnerFile, fileLocation, t)
@@ -43,7 +43,7 @@ func TestJavaCreateFileCustomFileSettings(t *testing.T) {
 	expectedRunnerFile := "../runner_files/PREFIXSillyJavaName.java"
 
 	function := getFileCreationFunction(lang)
-	_, fileLocation := function(code, &fileSettings)
+	_, fileLocation, _ := function(code, &fileSettings)
 	os.Remove(fileLocation)
 
 	assertEquals(expectedRunnerFile, fileLocation, t)
@@ -62,7 +62,7 @@ func TestCreateRunnerFile(t *testing.T) {
 	code := "print('Hello World')"
 
 	createFileFunction := getFileCreationFunction(lang)
-	_, fileLocation := createFileFunction(code, nil)
+	_, fileLocation, _ := createFileFunction(code, nil)
 	defer os.Remove(fileLocation)
 
 	_, err := os.Stat(fileLocation)
@@ -146,7 +146,7 @@ func TestGetRunnerFileLocation(t *testing.T) {
 func genericCreateFile(lang string, code string, expected string, t *testing.T) {
 	createFileFunction := getFileCreationFunction(lang)
 
-	sysCommand, fileLocation := createFileFunction(code, nil)
+	sysCommand, fileLocation, _ := createFileFunction(code, nil)
 	defer os.Remove(fileLocation)
 
 	actual := sysCommand + " " + fileLocation

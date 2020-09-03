@@ -2,7 +2,7 @@ package executable
 
 //Executable represents program that is ready to execute
 type Executable interface {
-	Run() string
+	Run() (string, error)
 }
 
 //FileSettings holds the settings for a runner file
@@ -23,7 +23,7 @@ type executableState struct {
 	createFile fileCreationFunction
 }
 
-type fileCreationFunction func(string, *FileSettings) (string, string)
+type fileCreationFunction func(string, *FileSettings) (string, string, error)
 
 var supportedLanguages = map[string]fileCreationFunction{
 	"python": createRunnerFilePython,

@@ -24,12 +24,13 @@ func TestInfiniteRecursion(t *testing.T) {
 	}
 
 	expected := "Exception in thread \"main\" java.lang.StackOverflowError\n"
-	actual := prog.Run()
+	_, actual := prog.Run()
 
-	newLineIndex := strings.Index(actual, "\n") + 1
-	actual = actual[:newLineIndex]
+	errorMessage := actual.Error()
+	newLineIndex := strings.Index(errorMessage, "\n") + 1
+	errorMessage = errorMessage[:newLineIndex]
 
-	assertEquals(expected, actual, t)
+	assertEquals(expected, errorMessage, t)
 }
 
 func TestInfiniteLoop(t *testing.T) {
@@ -39,8 +40,8 @@ func TestInfiniteLoop(t *testing.T) {
 	code.WriteString("\tx+=1\n")
 	prog, _ := NewExecutable("python", code.String(), nil)
 
-	actual := prog.Run()
+	_, actual := prog.Run()
 	expected := "Time Limit Exceeded 15s"
 
-	assertEquals(expected, actual, t)
+	assertEquals(expected, actual.Error(), t)
 }
