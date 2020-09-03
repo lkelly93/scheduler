@@ -22,12 +22,12 @@ func (ce *CompilationError) Error() string {
 	return fmt.Sprintf("Error, could not compile source code:\n %s", ce.errMessage)
 }
 
-//TimeLimitExceeded is returned if the max the exectuable took to long to run
-type TimeLimitExceeded struct {
+//TimeLimitExceededError is returned if the max the exectuable took to long to run
+type TimeLimitExceededError struct {
 	maxTime int
 }
 
-func (tle *TimeLimitExceeded) Error() string {
+func (tle *TimeLimitExceededError) Error() string {
 	return fmt.Sprintf("Time Limit Exceeded %ds", tle.maxTime)
 }
 
