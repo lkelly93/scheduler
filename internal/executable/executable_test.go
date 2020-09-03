@@ -50,7 +50,7 @@ func TestRunPythonCodeCustomFileSettings(t *testing.T) {
 	}
 	exec, _ := NewExecutable(lang, code, &settings)
 
-	actual := exec.Run()
+	actual, _ := exec.Run()
 	expected := "2.718281828459045\n6.283185307179586\n"
 	assertEquals(expected, actual, t)
 }
@@ -72,7 +72,12 @@ func TestRunJavaCodeCustomFileSettings(t *testing.T) {
 	}
 	exec, _ := NewExecutable(lang, code.String(), &settings)
 
-	actual := exec.Run()
+	actual, err := exec.Run()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	expected := "4\n3.141592653589793\n"
 	assertEquals(expected, actual, t)
 }
@@ -156,7 +161,7 @@ func TestRunBadJavaCode(t *testing.T) {
 		"2 errors\n" +
 		"error: compilation failed\n"
 
-	genericRunBadCode(prog, expected, t)
+	genericRuntimeErrorTest(prog, expected, t)
 
 }
 
@@ -167,17 +172,22 @@ func TestRunBadPythonCode(t *testing.T) {
 		"            ^\n" +
 		"SyntaxError: EOL while scanning string literal\n"
 
-	genericRunBadCode(prog, expected, t)
+	genericRuntimeErrorTest(prog, expected, t)
 }
 
 /***** Supporting Methods *****/
 func genericRunCode(prog Executable, expected string, t *testing.T) {
-	actual := prog.Run()
+	actual, _ := prog.Run()
 
 	assertEquals(expected, actual, t)
 }
 
-func genericRunBadCode(prog Executable, expected string, t *testing.T) {
-	actual := prog.Run()
-	assertEquals(expected, actual, t)
+func genericRuntimeErrorTest(prog Executable, expected string, t *testing.T) {
+	_, actual := prog.Run()
+	_, ok := actual.(*RuntimeError)
+	if !ok {
+		t.Errorf("Expected RuntimeError but got %T", actual)
+		return
+	}
+	assertEquals(expected, actual.Error(), t)
 }

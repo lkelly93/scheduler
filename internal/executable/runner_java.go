@@ -6,26 +6,28 @@ import (
 )
 
 //Java creates a runnerFile for java languages.
-func createRunnerFileJava(code string, settings *FileSettings) (string, string) {
+func createRunnerFileJava(code string, settings *FileSettings) (string, string, error) {
 	settings = fillRestOfFileSettings("java", settings)
 	langCommand := "java"
-	var fileName strings.Builder
-	fileName.WriteString(settings.FileNamePrefix)
-	fileName.WriteString(settings.ClassName)
-	fileName.WriteString(".java")
-	outFileName := getRunnerFileLocation(fileName.String())
+	var runnerFileName strings.Builder
+	runnerFileName.WriteString(settings.FileNamePrefix)
+	runnerFileName.WriteString(settings.ClassName)
+	runnerFileName.WriteString(".java")
+	runnerFileLocation := getRunnerFileLocation(runnerFileName.String())
 
 	var formattedCode strings.Builder
 	insertImportsJava(&formattedCode, settings)
 	formattedCode.WriteString(code)
 	insertTrailingCodeJava(&formattedCode, settings)
 
-	err := createFileAndAddCode(outFileName, formattedCode.String())
-
+	err := createFileAndAddCode(runnerFileLocation, formattedCode.String())
 	if err != nil {
 		log.Fatal("Could not create runner file!")
 	}
-	return langCommand, outFileName
+
+	return langCommand,
+		runnerFileLocation,
+		nil
 }
 
 func insertImportsJava(formattedCode *strings.Builder, settings *FileSettings) {
