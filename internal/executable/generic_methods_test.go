@@ -33,8 +33,8 @@ func assertCompilationError(err error, t *testing.T) {
 }
 
 func assertTimeLimitError(err error, t *testing.T) {
-	if _, ok := err.(*TimeLimitExceeded); !ok {
-		t.Errorf("Expected TimeLimitExceeded but got %T", err)
+	if _, ok := err.(*TimeLimitExceededError); !ok {
+		t.Errorf("Expected TimeLimitExceededError but got %T", err)
 	}
 }
 

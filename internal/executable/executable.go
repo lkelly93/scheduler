@@ -59,7 +59,7 @@ func (state *executableState) Run() (string, error) {
 	//Run the command and get the stdOut/stdErr
 	err = command.Run()
 	if ctx.Err() == context.DeadlineExceeded {
-		return "", &TimeLimitExceeded{maxTime: timeoutInSeconds}
+		return "", &TimeLimitExceededError{maxTime: timeoutInSeconds}
 	}
 	if err != nil {
 		errorMessage := removeFilePath(stErr.String(), fileLocation)
