@@ -8,7 +8,7 @@ type UnsupportedLanguageError struct {
 	lang string
 }
 
-func (ule *UnsupportedLanguageError) Error() string {
+func (ule UnsupportedLanguageError) Error() string {
 	return fmt.Sprintf("%s is not a supported language", ule.lang)
 }
 
@@ -18,7 +18,7 @@ type CompilationError struct {
 	errMessage string
 }
 
-func (ce *CompilationError) Error() string {
+func (ce CompilationError) Error() string {
 	return fmt.Sprintf("Error, could not compile source code:\n %s", ce.errMessage)
 }
 
@@ -27,7 +27,7 @@ type TimeLimitExceededError struct {
 	maxTime int
 }
 
-func (tle *TimeLimitExceededError) Error() string {
+func (tle TimeLimitExceededError) Error() string {
 	return fmt.Sprintf("Time Limit Exceeded %ds", tle.maxTime)
 }
 
@@ -37,6 +37,6 @@ type RuntimeError struct {
 	errMessage string
 }
 
-func (re *RuntimeError) Error() string {
+func (re RuntimeError) Error() string {
 	return re.errMessage
 }

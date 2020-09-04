@@ -107,7 +107,19 @@ func (executeHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
     }
 
     //TODO add exec to queue here...
-    stdout := exec.Run()
+    stdout, err := exec.Run()
+    if (err != nil) {
+        if _, ok = err.(*executable.RuntimeError); ok {
+            writeErrorResponse(rw, 200, "Runtime Error", err.Error())
+        } else if _, ok = err.(*executable.CompilationError); ok {
+            writeErrorResponse(rw, 200, "Compilation Error", err.Error())
+        } else if _, ok = err.(*executable.TimeLimitExceededError); ok {
+            writeErrorResponse(rw, 200, "Time Limit Exceeded", err.Error())
+        } else {
+            writeErrorResponse(rw, 500, "Internal Server Error", "Internal Server Error")
+        }
+        return
+    }
     rw.WriteHeader(200)
     writeJSON(rw, executionOutputResponse{
         Stdout: stdout,
