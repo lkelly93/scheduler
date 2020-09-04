@@ -19,3 +19,27 @@ func assertEquals(expected string, actual string, t *testing.T) {
 		t.Errorf("Error at index %d, expected %c but was %c", i, expectedChar, actualChar)
 	}
 }
+
+func assertRuntimeError(err error, t *testing.T) {
+	if _, ok := err.(*RuntimeError); !ok {
+		t.Errorf("Expected RuntimeError but got %T", err)
+	}
+}
+
+func assertCompilationError(err error, t *testing.T) {
+	if _, ok := err.(*CompilationError); !ok {
+		t.Errorf("Expected CompilationError but got %T", err)
+	}
+}
+
+func assertTimeLimitError(err error, t *testing.T) {
+	if _, ok := err.(*TimeLimitExceededError); !ok {
+		t.Errorf("Expected TimeLimitExceededError but got %T", err)
+	}
+}
+
+func assertUnsupportedLanguageError(err error, t *testing.T) {
+	if _, ok := err.(*UnsupportedLanguageError); !ok {
+		t.Errorf("Expected UnsupportedLanguageError but got %T", err)
+	}
+}

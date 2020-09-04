@@ -5,8 +5,6 @@ package executable
 import (
 	"bytes"
 	"context"
-	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"time"
@@ -18,23 +16,28 @@ import (
 func NewExecutable(lang string, code string, settings *FileSettings) (Executable, error) {
 	function := getFileCreationFunction(lang)
 	if function != nil {
-		state := executableState{
+		return &executableState{
 			code:       code,
 			settings:   settings,
 			createFile: function,
-		}
-		return &state, nil
+		}, nil
 	}
-	err := fmt.Sprintf("%s is not a supported language", lang)
-	return nil, errors.New(err)
+	return nil, &UnsupportedLanguageError{
+		lang: lang,
+	}
 }
 
 //Run runs the given program and then returns the output, this could be the
 //output from a successful run or the error message from an unsuccessful run.
-func (state *executableState) Run() string {
+func (state *executableState) Run() (string, error) {
 	timeoutInSeconds := 15
-	//Create the file and get the data to run it
-	sysCommand, fileLocation := state.createFile(state.code, state.settings)
+	//Create the file and get the data to run it. If sys command is an empty
+	//string then we had a compilation error and the error is stored in the
+	//fileLocation variable.
+	sysCommand, fileLocation, err := state.createFile(state.code, state.settings)
+	if err != nil {
+		return "", err
+	}
 	//Remove the old files
 	defer os.Remove(fileLocation)
 
@@ -54,13 +57,14 @@ func (state *executableState) Run() string {
 	command.Stderr = &stErr
 
 	//Run the command and get the stdOut/stdErr
-	err := command.Run()
+	err = command.Run()
 	if ctx.Err() == context.DeadlineExceeded {
-		return fmt.Sprintf("Time Limit Exceeded %ds", timeoutInSeconds)
+		return "", &TimeLimitExceededError{maxTime: timeoutInSeconds}
 	}
 	if err != nil {
-		return removeFilePath(stErr.String(), fileLocation)
+		errorMessage := removeFilePath(stErr.String(), fileLocation)
+		return "", &RuntimeError{errMessage: errorMessage}
 	}
 
-	return string(stOut.String())
+	return string(stOut.String()), nil
 }
