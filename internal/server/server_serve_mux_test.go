@@ -171,16 +171,15 @@ func Test_Execute_Language(t *testing.T) {
         expectErrorResponse(t, "Invalid Request",
             fmt.Sprintf("Code character limit of %d chars exceeded.", codeCharacterLimit))
     })
-}
 
-// returns code 200 on compilation error w/ JSON body in format:
-// { "ErrorType": "compilation",
-//   "Error": "..." }
-// (compilation error is returned by Run function)
-//
-// returns code 200 on runtime error w/ JSON body in format:
-// { "ErrorType": "runtime",
-//   "Error": "..." }
-//
-// returns code 400 when code is too long w/ JSON body in format:
-// { "Error": "Code execeeds character limit." }
+    t.Run("POST /execute/python runtime error", func(t *testing.T) {
+        post("/execute/python", `{"Code": "fail" }`).
+        expectCode(t, 200).
+        expectErrorResponse(t, "Runtime Error",
+            "Traceback (most recent call last):\n" +
+            "  File \"PythonRunner.py\", line 2, in <module>\n" +
+            "    fail\n" +
+            "NameError: name 'fail' is not defined\n")
+    })
+
+}
