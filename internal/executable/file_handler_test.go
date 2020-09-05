@@ -144,6 +144,7 @@ func TestGetRunnerFileLocation(t *testing.T) {
 
 // /****** Supporting Methods ******/
 func genericCreateFile(lang string, code string, expected string, t *testing.T) {
+	t.Helper()
 	createFileFunction := getFileCreationFunction(lang)
 
 	sysCommand, fileLocation, _ := createFileFunction(code, nil)

@@ -1,136 +1,258 @@
+//Package executable represents a program written in a generic language.
+//This package can run the given program and return the result
 package executable
 
 import (
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 )
 
 func TestNewExecutable(t *testing.T) {
-	lang := "python"
-	code := "print('Hello World')"
-	exe := getNewExecutableForTesting(lang, code, t)
-
-	//Cast Executable interface to state struct
-	state := exe.(*executableState)
-
-	assertEquals(code, state.code, t)
-}
-
-func TestNewExecutableFail(t *testing.T) {
-	lang := "Not a Language"
-	_, err := NewExecutable(lang, "Not Code", nil)
-	if err == nil {
-		t.Errorf("\"%s\" was accepted as a language and should not of been.", lang)
+	type args struct {
+		lang     string
+		code     string
+		settings *FileSettings
 	}
-	assertUnsupportedLanguageError(err, t)
-}
-
-// /***** Test Good Runs *****/
-func TestRunPythonCode(t *testing.T) {
-	lang := "python"
-	code := "print('Hello World')"
-	prog := getNewExecutableForTesting(lang, code, t)
-	expected := "Hello World\n"
-	genericRunCode(prog, expected, t)
-}
-
-func TestRunPythonCodeCustomFileSettings(t *testing.T) {
-	lang := "python"
-	code := "print(np.e)"
-
-	settings := FileSettings{
-		Imports:        "import math\nimport numpy as np",
-		ClassName:      "",
-		TrailingCode:   "print(math.tau)",
-		FileNamePrefix: "EXECUTABLE_TESTS",
+	allTests := []struct {
+		name          string
+		args          args
+		expected      Executable
+		expectedError error
+	}{
+		{
+			name: "NewExecutable",
+			args: args{
+				lang: "python",
+				code: "print('Hello World')",
+			},
+			expected: &executableState{
+				code:     "print('Hello World')",
+				settings: nil,
+			},
+			expectedError: nil,
+		},
+		{
+			name: "NewExecutableFail",
+			args: args{
+				lang: "Not a Language",
+				code: "Not Code",
+			},
+			expected: nil,
+			expectedError: &UnsupportedLanguageError{
+				lang: "Not a Language",
+			},
+		},
 	}
-	exec, _ := NewExecutable(lang, code, &settings)
+	for _, test := range allTests {
+		t.Run(test.name, func(t *testing.T) {
+			//These tests can be parallelized
+			t.Parallel()
+			got, err := NewExecutable(test.args.lang, test.args.code, test.args.settings)
+			if (err != nil) && (test.expectedError != nil) {
+				assertEquals(test.expectedError.Error(), err.Error(), t)
+				return
+				//Check if error happened and it should not have.
+			} else if (err != nil) && (test.expectedError == nil) {
+				t.Error(err)
+				return
+			}
+			//Have to set got's function field to nil because DeeplyEquals fails if
+			//function values are not equal to nil. I will test this manually in
+			//another method.
+			gotState := got.(*executableState)
+			gotState.createFile = nil
 
-	actual, _ := exec.Run()
-	expected := "2.718281828459045\n6.283185307179586\n"
-	assertEquals(expected, actual, t)
-}
-func TestRunJavaCodeCustomFileSettings(t *testing.T) {
-	lang := "java"
-	var code strings.Builder
-	code.WriteString("public static void main(String[] args){\n")
-	code.WriteString("HashMap<Integer,Integer> x = new HashMap<>();\n")
-	code.WriteString("x.put(5,4);\n")
-	code.WriteString("System.out.println(x.remove(5));\n")
-	code.WriteString("pi();\n")
-	code.WriteString("}\n")
-
-	settings := FileSettings{
-		Imports:        "import java.lang.*;\n import java.util.*;",
-		ClassName:      "",
-		TrailingCode:   "public static void pi(){System.out.println(Math.PI);}",
-		FileNamePrefix: "EXECUTABLE_TESTS",
+			if !reflect.DeepEqual(got, test.expected) {
+				t.Errorf("NewExecutable() was %v, want %v", got, test.expected)
+			}
+		})
 	}
-	exec, _ := NewExecutable(lang, code.String(), &settings)
+}
 
-	actual, err := exec.Run()
+func TestRuns(t *testing.T) {
+	var JavaCustomSettingsCode strings.Builder
+	JavaCustomSettingsCode.WriteString("public static void main(String[] args){\n")
+	JavaCustomSettingsCode.WriteString("HashMap<Integer,Integer> x = new HashMap<>();\n")
+	JavaCustomSettingsCode.WriteString("x.put(5,4);\n")
+	JavaCustomSettingsCode.WriteString("System.out.println(x.remove(5));\n")
+	JavaCustomSettingsCode.WriteString("pi();\n")
+	JavaCustomSettingsCode.WriteString("}\n")
 
+	var BadJavaCodeExpectedMessage strings.Builder
+	BadJavaCodeExpectedMessage.WriteString("JavaRunner.java:3: error: ';' expected\n")
+	BadJavaCodeExpectedMessage.WriteString("public static void main(String[] args){System.out.println(\"Hello World\")\n")
+	BadJavaCodeExpectedMessage.WriteString("                                                                        ^\n")
+	BadJavaCodeExpectedMessage.WriteString("JavaRunner.java:5: error: reached end of file while parsing\n")
+	BadJavaCodeExpectedMessage.WriteString("}\n")
+	BadJavaCodeExpectedMessage.WriteString(" ^\n")
+	BadJavaCodeExpectedMessage.WriteString("2 errors\n")
+	BadJavaCodeExpectedMessage.WriteString("error: compilation failed\n")
+
+	var BadPythonCodeExpectedMessage strings.Builder
+	BadPythonCodeExpectedMessage.WriteString("  File \"PythonRunner.py\", line 2\n")
+	BadPythonCodeExpectedMessage.WriteString("    print('Hi\n")
+	BadPythonCodeExpectedMessage.WriteString("            ^\n")
+	BadPythonCodeExpectedMessage.WriteString("SyntaxError: EOL while scanning string literal\n")
+
+	pythonLongCodeLocation := "test_data/longPythonCode.py"
+	pythonLongCodeData, err := ioutil.ReadFile(pythonLongCodeLocation)
 	if err != nil {
-		t.Fatal(err)
+		t.Errorf("Could not read in %s", pythonLongCodeLocation)
 	}
-
-	expected := "4\n3.141592653589793\n"
-	assertEquals(expected, actual, t)
-}
-
-func TestRunPythonCodeLonger(t *testing.T) {
-	fileLocation := "test_data/longPythonCode.py"
-	longCodeFile, err := ioutil.ReadFile(fileLocation)
+	javaLongCodeLocation := "test_data/longJavaCode.java"
+	javaLongCodeData, err := ioutil.ReadFile(javaLongCodeLocation)
 	if err != nil {
-		t.Errorf("Could not read in %s", fileLocation)
+		t.Errorf("Could not read in %s", javaLongCodeLocation)
 	}
-	code := string(longCodeFile)
-	exec := getNewExecutableForTesting("python", code, t)
-	expected := "Male\n"
-	genericRunCode(exec, expected, t)
-}
 
-func TestRunJavaCode(t *testing.T) {
-	code := "public static void main(String[] args){System.out.println(\"Hello World\");}"
-	exec := getNewExecutableForTesting("java", code, t)
-	expected := "Hello World\n"
-	genericRunCode(exec, expected, t)
-}
-
-func TestRunJavaCodeLonger(t *testing.T) {
-	fileLocation := "test_data/longJavaCode.java"
-	longCode, err := ioutil.ReadFile(fileLocation)
+	recursiveFileLocation := "test_data/recursiveCode.java"
+	recursiveFileData, err := ioutil.ReadFile(recursiveFileLocation)
 	if err != nil {
-		t.Errorf("Could not read in %s", fileLocation)
+		t.Errorf("Could not read in %s", recursiveFileLocation)
 	}
-	code := string(longCode)
-	exec := getNewExecutableForTesting("java", code, t)
-	var expected strings.Builder
-	expected.WriteString("NonRecursive\n")
-	expected.WriteString("[0, 1, 0, 0, 1, 0, 1, 0]\n")
-	expected.WriteString("[0, 0, 0, 0, 0, 1, 1, 0]\n")
-	genericRunCode(exec, expected.String(), t)
+
+	type args struct {
+		lang     string
+		code     string
+		settings *FileSettings
+	}
+	allTests := []struct {
+		name     string
+		args     args
+		expected string
+		wantErr  error
+	}{
+		{
+			name: "TestRunPythonCode",
+			args: args{
+				lang:     "python",
+				code:     "print('Hello World')",
+				settings: nil,
+			},
+			expected: "Hello World\n",
+			wantErr:  nil,
+		},
+		{
+			name: "TestRunPythonCodeCustomFileSettings",
+			args: args{
+				lang: "python",
+				code: "print(np.e)",
+				settings: &FileSettings{
+					Imports:        "import math\nimport numpy as np",
+					ClassName:      "",
+					TrailingCode:   "print(math.tau)",
+					FileNamePrefix: "",
+				},
+			},
+			expected: "2.718281828459045\n6.283185307179586\n",
+			wantErr:  nil,
+		},
+		{
+			name: "TestRunJavaCode",
+			args: args{
+				lang:     "java",
+				code:     "public static void main(String[] args){System.out.println(\"Hello World\");}",
+				settings: nil,
+			},
+			expected: "Hello World\n",
+			wantErr:  nil,
+		},
+		{
+			name: "TestRunJavaCodeCustomFileSettings",
+			args: args{
+				lang: "java",
+				code: JavaCustomSettingsCode.String(),
+				settings: &FileSettings{
+					Imports:        "import java.lang.*;\n import java.util.*;",
+					ClassName:      "",
+					TrailingCode:   "public static void pi(){System.out.println(Math.PI);}",
+					FileNamePrefix: "",
+				},
+			},
+			expected: "4\n3.141592653589793\n",
+			wantErr:  nil,
+		},
+		{
+			name: "TestRunPythonCodeLonger",
+			args: args{
+				lang:     "python",
+				code:     string(pythonLongCodeData),
+				settings: nil,
+			},
+			expected: "Male\n",
+			wantErr:  nil,
+		},
+		{
+			name: "TestRunJavaCodeLonger",
+			args: args{
+				lang:     "java",
+				code:     string(javaLongCodeData),
+				settings: nil,
+			},
+			expected: "NonRecursive\n[0, 1, 0, 0, 1, 0, 1, 0]\n[0, 0, 0, 0, 0, 1, 1, 0]\n",
+			wantErr:  nil,
+		},
+		{
+			name: "TestRecursion",
+			args: args{
+				lang:     "java",
+				code:     string(recursiveFileData),
+				settings: nil,
+			},
+			expected: "Recursive\n[0, 1, 0, 0, 1, 0, 1, 0]\n[0, 0, 0, 0, 0, 1, 1, 0]\n",
+			wantErr:  nil,
+		},
+		{
+			name: "TestBadJavaCode",
+			args: args{
+				lang:     "java",
+				code:     "public static void main(String[] args){System.out.println(\"Hello World\")",
+				settings: nil,
+			},
+			expected: "",
+			wantErr: &RuntimeError{
+				errMessage: BadJavaCodeExpectedMessage.String(),
+			},
+		},
+		{
+			name: "TestBadPythonCode",
+			args: args{
+				lang:     "python",
+				code:     "print('Hi",
+				settings: nil,
+			},
+			expected: "",
+			wantErr: &RuntimeError{
+				errMessage: BadPythonCodeExpectedMessage.String(),
+			},
+		},
+	}
+	for _, test := range allTests {
+		t.Run(test.name, func(t *testing.T) {
+			exec, err := NewExecutable(test.args.lang,
+				test.args.code,
+				test.args.settings)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			actual, err := exec.Run()
+			if (err != nil) && test.wantErr != nil {
+				assertEquals(err.Error(), test.wantErr.Error(), t)
+				return
+			} else if (err != nil) && (test.wantErr == nil) {
+				t.Error(err)
+				return
+			}
+			assertEquals(test.expected, actual, t)
+		})
+	}
 }
 
-func TestRecursion(t *testing.T) {
-	fileLocation := "test_data/recursiveCode.java"
-	longCode, err := ioutil.ReadFile(fileLocation)
-	if err != nil {
-		t.Errorf("Could not read in %s", fileLocation)
-	}
-	code := string(longCode)
-	exec := getNewExecutableForTesting("java", code, t)
-	var expected strings.Builder
-	expected.WriteString("Recursive\n")
-	expected.WriteString("[0, 1, 0, 0, 1, 0, 1, 0]\n")
-	expected.WriteString("[0, 0, 0, 0, 0, 1, 1, 0]\n")
-	genericRunCode(exec, expected.String(), t)
-
-}
-
-func TestFileIsDeletedAfter(t *testing.T) {
+func TestFileIsDeletedAfterRun(t *testing.T) {
 	exec := getNewExecutableForTesting("python", "print('Hello World')", t)
 	fileLocation := "../runner_files/DeletedAfterTestPythonRunner.py"
 	_, err := os.Stat(fileLocation)
@@ -144,44 +266,4 @@ func TestFileIsDeletedAfter(t *testing.T) {
 	if err == nil {
 		t.Errorf("%s still exist after Run() was called. It should of been deleted", fileLocation)
 	}
-}
-
-/***** Test Bad Runs*****/
-func TestRunBadJavaCode(t *testing.T) {
-	code := "public static void main(String[] args){System.out.println(\"Hello World\")"
-	exec := getNewExecutableForTesting("java", code, t)
-	expected := "EXECUTABLE_TESTSJavaRunner.java:3: error: ';' expected\n" +
-		"public static void main(String[] args){System.out.println(\"Hello World\")\n" +
-		"                                                                        ^\n" +
-		"EXECUTABLE_TESTSJavaRunner.java:5: error: reached end of file while parsing\n" +
-		"}\n" +
-		" ^\n" +
-		"2 errors\n" +
-		"error: compilation failed\n"
-
-	genericRuntimeErrorTest(exec, expected, t)
-
-}
-
-func TestRunBadPythonCode(t *testing.T) {
-	exec := getNewExecutableForTesting("python", "print('Hi", t)
-	expected := "  File \"EXECUTABLE_TESTSPythonRunner.py\", line 2\n" +
-		"    print('Hi\n" +
-		"            ^\n" +
-		"SyntaxError: EOL while scanning string literal\n"
-
-	genericRuntimeErrorTest(exec, expected, t)
-}
-
-/***** Supporting Methods *****/
-func genericRunCode(prog Executable, expected string, t *testing.T) {
-	actual, _ := prog.Run()
-
-	assertEquals(expected, actual, t)
-}
-
-func genericRuntimeErrorTest(prog Executable, expected string, t *testing.T) {
-	_, actual := prog.Run()
-	assertRuntimeError(actual, t)
-	assertEquals(expected, actual.Error(), t)
 }
