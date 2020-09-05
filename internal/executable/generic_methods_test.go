@@ -20,6 +20,18 @@ func assertEquals(expected string, actual string, t *testing.T) {
 	}
 }
 
+func getNewExecutableForTesting(lang string, code string, t *testing.T) Executable {
+	exe, err := NewExecutable(lang, code, &FileSettings{
+		FileNamePrefix: "EXECUTABLE_TESTS",
+	})
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	return exe
+}
+
 func assertRuntimeError(err error, t *testing.T) {
 	if _, ok := err.(*RuntimeError); !ok {
 		t.Errorf("Expected RuntimeError but got %T", err)
