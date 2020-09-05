@@ -10,10 +10,7 @@ import (
 func TestNewExecutable(t *testing.T) {
 	lang := "python"
 	code := "print('Hello World')"
-	exe, err := NewExecutable(lang, code, nil)
-	if err != nil {
-		t.Error(err)
-	}
+	exe := getNewExecutableForTesting(lang, code, t)
 
 	//Cast Executable interface to state struct
 	state := exe.(*executableState)
@@ -24,17 +21,17 @@ func TestNewExecutable(t *testing.T) {
 func TestNewExecutableFail(t *testing.T) {
 	lang := "Not a Language"
 	_, err := NewExecutable(lang, "Not Code", nil)
-	assertUnsupportedLanguageError(err, t)
 	if err == nil {
 		t.Errorf("\"%s\" was accepted as a language and should not of been.", lang)
 	}
+	assertUnsupportedLanguageError(err, t)
 }
 
 // /***** Test Good Runs *****/
 func TestRunPythonCode(t *testing.T) {
 	lang := "python"
 	code := "print('Hello World')"
-	prog, _ := NewExecutable(lang, code, nil)
+	prog := getNewExecutableForTesting(lang, code, t)
 	expected := "Hello World\n"
 	genericRunCode(prog, expected, t)
 }
@@ -47,7 +44,7 @@ func TestRunPythonCodeCustomFileSettings(t *testing.T) {
 		Imports:        "import math\nimport numpy as np",
 		ClassName:      "",
 		TrailingCode:   "print(math.tau)",
-		FileNamePrefix: "",
+		FileNamePrefix: "EXECUTABLE_TESTS",
 	}
 	exec, _ := NewExecutable(lang, code, &settings)
 
@@ -69,7 +66,7 @@ func TestRunJavaCodeCustomFileSettings(t *testing.T) {
 		Imports:        "import java.lang.*;\n import java.util.*;",
 		ClassName:      "",
 		TrailingCode:   "public static void pi(){System.out.println(Math.PI);}",
-		FileNamePrefix: "",
+		FileNamePrefix: "EXECUTABLE_TESTS",
 	}
 	exec, _ := NewExecutable(lang, code.String(), &settings)
 
@@ -90,16 +87,16 @@ func TestRunPythonCodeLonger(t *testing.T) {
 		t.Errorf("Could not read in %s", fileLocation)
 	}
 	code := string(longCodeFile)
-	prog, _ := NewExecutable("python", code, nil)
+	exec := getNewExecutableForTesting("python", code, t)
 	expected := "Male\n"
-	genericRunCode(prog, expected, t)
+	genericRunCode(exec, expected, t)
 }
 
 func TestRunJavaCode(t *testing.T) {
 	code := "public static void main(String[] args){System.out.println(\"Hello World\");}"
-	prog, _ := NewExecutable("java", code, nil)
+	exec := getNewExecutableForTesting("java", code, t)
 	expected := "Hello World\n"
-	genericRunCode(prog, expected, t)
+	genericRunCode(exec, expected, t)
 }
 
 func TestRunJavaCodeLonger(t *testing.T) {
@@ -109,12 +106,12 @@ func TestRunJavaCodeLonger(t *testing.T) {
 		t.Errorf("Could not read in %s", fileLocation)
 	}
 	code := string(longCode)
-	prog, _ := NewExecutable("java", code, nil)
+	exec := getNewExecutableForTesting("java", code, t)
 	var expected strings.Builder
 	expected.WriteString("NonRecursive\n")
 	expected.WriteString("[0, 1, 0, 0, 1, 0, 1, 0]\n")
 	expected.WriteString("[0, 0, 0, 0, 0, 1, 1, 0]\n")
-	genericRunCode(prog, expected.String(), t)
+	genericRunCode(exec, expected.String(), t)
 }
 
 func TestRecursion(t *testing.T) {
@@ -124,24 +121,24 @@ func TestRecursion(t *testing.T) {
 		t.Errorf("Could not read in %s", fileLocation)
 	}
 	code := string(longCode)
-	prog, _ := NewExecutable("java", code, nil)
+	exec := getNewExecutableForTesting("java", code, t)
 	var expected strings.Builder
 	expected.WriteString("Recursive\n")
 	expected.WriteString("[0, 1, 0, 0, 1, 0, 1, 0]\n")
 	expected.WriteString("[0, 0, 0, 0, 0, 1, 1, 0]\n")
-	genericRunCode(prog, expected.String(), t)
+	genericRunCode(exec, expected.String(), t)
 
 }
 
 func TestFileIsDeletedAfter(t *testing.T) {
-	prog, _ := NewExecutable("python", "print('Hello World')", nil)
-	fileLocation := "../runner_files/PythonRunner.py"
+	exec := getNewExecutableForTesting("python", "print('Hello World')", t)
+	fileLocation := "../runner_files/DeletedAfterTestPythonRunner.py"
 	_, err := os.Stat(fileLocation)
 	if err == nil {
 		t.Fatalf("%s existed before Run() was called", fileLocation)
 	}
 
-	prog.Run()
+	exec.Run()
 
 	_, err = os.Stat(fileLocation)
 	if err == nil {
@@ -152,28 +149,28 @@ func TestFileIsDeletedAfter(t *testing.T) {
 /***** Test Bad Runs*****/
 func TestRunBadJavaCode(t *testing.T) {
 	code := "public static void main(String[] args){System.out.println(\"Hello World\")"
-	prog, _ := NewExecutable("java", code, nil)
-	expected := "JavaRunner.java:3: error: ';' expected\n" +
+	exec := getNewExecutableForTesting("java", code, t)
+	expected := "EXECUTABLE_TESTSJavaRunner.java:3: error: ';' expected\n" +
 		"public static void main(String[] args){System.out.println(\"Hello World\")\n" +
 		"                                                                        ^\n" +
-		"JavaRunner.java:5: error: reached end of file while parsing\n" +
+		"EXECUTABLE_TESTSJavaRunner.java:5: error: reached end of file while parsing\n" +
 		"}\n" +
 		" ^\n" +
 		"2 errors\n" +
 		"error: compilation failed\n"
 
-	genericRuntimeErrorTest(prog, expected, t)
+	genericRuntimeErrorTest(exec, expected, t)
 
 }
 
 func TestRunBadPythonCode(t *testing.T) {
-	prog, _ := NewExecutable("python", "print('Hi", nil)
-	expected := "  File \"PythonRunner.py\", line 2\n" +
+	exec := getNewExecutableForTesting("python", "print('Hi", t)
+	expected := "  File \"EXECUTABLE_TESTSPythonRunner.py\", line 2\n" +
 		"    print('Hi\n" +
 		"            ^\n" +
 		"SyntaxError: EOL while scanning string literal\n"
 
-	genericRuntimeErrorTest(prog, expected, t)
+	genericRuntimeErrorTest(exec, expected, t)
 }
 
 /***** Supporting Methods *****/
