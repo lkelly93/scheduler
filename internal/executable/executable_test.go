@@ -47,11 +47,24 @@ func TestNewExecutable(t *testing.T) {
 		},
 	}
 	for _, test := range allTests {
+		//The below line of code is needed because of a Go gotcha hidden inside
+		//the go testing framework.
+		//Read https://gist.github.com/posener/92a55c4cd441fc5e5e85f27bca008721
+		//For more information.
+		test := test
 		t.Run(test.name, func(t *testing.T) {
-			//These tests can be parallelized
 			t.Parallel()
 			got, err := NewExecutable(test.args.lang, test.args.code, test.args.settings)
 			if (err != nil) && (test.expectedError != nil) {
+				if isUnsupportedLanguageError(test.expectedError) {
+					if !isUnsupportedLanguageError(err) {
+						t.Errorf("Expected UnsupportedLanguageError but got %T", err)
+						return
+					}
+				} else {
+					t.Errorf("%s returned an error that was not expected, error was %T", test.name, err)
+					return
+				}
 				assertEquals(test.expectedError.Error(), err.Error(), t)
 				return
 				//Check if error happened and it should not have.
@@ -120,10 +133,10 @@ func TestRuns(t *testing.T) {
 		settings *FileSettings
 	}
 	allTests := []struct {
-		name     string
-		args     args
-		expected string
-		wantErr  error
+		name          string
+		args          args
+		expected      string
+		expectedError error
 	}{
 		{
 			name: "TestRunPythonCode",
@@ -132,8 +145,8 @@ func TestRuns(t *testing.T) {
 				code:     "print('Hello World')",
 				settings: nil,
 			},
-			expected: "Hello World\n",
-			wantErr:  nil,
+			expected:      "Hello World\n",
+			expectedError: nil,
 		},
 		{
 			name: "TestRunPythonCodeCustomFileSettings",
@@ -147,8 +160,8 @@ func TestRuns(t *testing.T) {
 					FileNamePrefix: "",
 				},
 			},
-			expected: "2.718281828459045\n6.283185307179586\n",
-			wantErr:  nil,
+			expected:      "2.718281828459045\n6.283185307179586\n",
+			expectedError: nil,
 		},
 		{
 			name: "TestRunJavaCode",
@@ -157,8 +170,8 @@ func TestRuns(t *testing.T) {
 				code:     "public static void main(String[] args){System.out.println(\"Hello World\");}",
 				settings: nil,
 			},
-			expected: "Hello World\n",
-			wantErr:  nil,
+			expected:      "Hello World\n",
+			expectedError: nil,
 		},
 		{
 			name: "TestRunJavaCodeCustomFileSettings",
@@ -172,8 +185,8 @@ func TestRuns(t *testing.T) {
 					FileNamePrefix: "",
 				},
 			},
-			expected: "4\n3.141592653589793\n",
-			wantErr:  nil,
+			expected:      "4\n3.141592653589793\n",
+			expectedError: nil,
 		},
 		{
 			name: "TestRunPythonCodeLonger",
@@ -182,8 +195,8 @@ func TestRuns(t *testing.T) {
 				code:     string(pythonLongCodeData),
 				settings: nil,
 			},
-			expected: "Male\n",
-			wantErr:  nil,
+			expected:      "Male\n",
+			expectedError: nil,
 		},
 		{
 			name: "TestRunJavaCodeLonger",
@@ -192,8 +205,8 @@ func TestRuns(t *testing.T) {
 				code:     string(javaLongCodeData),
 				settings: nil,
 			},
-			expected: "NonRecursive\n[0, 1, 0, 0, 1, 0, 1, 0]\n[0, 0, 0, 0, 0, 1, 1, 0]\n",
-			wantErr:  nil,
+			expected:      "NonRecursive\n[0, 1, 0, 0, 1, 0, 1, 0]\n[0, 0, 0, 0, 0, 1, 1, 0]\n",
+			expectedError: nil,
 		},
 		{
 			name: "TestRecursion",
@@ -202,8 +215,8 @@ func TestRuns(t *testing.T) {
 				code:     string(recursiveFileData),
 				settings: nil,
 			},
-			expected: "Recursive\n[0, 1, 0, 0, 1, 0, 1, 0]\n[0, 0, 0, 0, 0, 1, 1, 0]\n",
-			wantErr:  nil,
+			expected:      "Recursive\n[0, 1, 0, 0, 1, 0, 1, 0]\n[0, 0, 0, 0, 0, 1, 1, 0]\n",
+			expectedError: nil,
 		},
 		{
 			name: "TestBadJavaCode",
@@ -213,7 +226,7 @@ func TestRuns(t *testing.T) {
 				settings: nil,
 			},
 			expected: "",
-			wantErr: &RuntimeError{
+			expectedError: &RuntimeError{
 				errMessage: BadJavaCodeExpectedMessage.String(),
 			},
 		},
@@ -225,13 +238,23 @@ func TestRuns(t *testing.T) {
 				settings: nil,
 			},
 			expected: "",
-			wantErr: &RuntimeError{
+			expectedError: &RuntimeError{
 				errMessage: BadPythonCodeExpectedMessage.String(),
 			},
 		},
 	}
 	for _, test := range allTests {
+		//The below line of code is needed because of a Go gotcha hidden inside
+		//the go testing framework.
+		//Read https://gist.github.com/posener/92a55c4cd441fc5e5e85f27bca008721
+		//For more information.
+		test := test
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			if test.args.settings == nil {
+				test.args.settings = &FileSettings{}
+			}
+			test.args.settings.FileNamePrefix = test.name
 			exec, err := NewExecutable(test.args.lang,
 				test.args.code,
 				test.args.settings)
@@ -240,10 +263,26 @@ func TestRuns(t *testing.T) {
 				return
 			}
 			actual, err := exec.Run()
-			if (err != nil) && test.wantErr != nil {
-				assertEquals(err.Error(), test.wantErr.Error(), t)
+			if (err != nil) && test.expectedError != nil {
+				//Check error types
+				if isRuntimeError(test.expectedError) {
+					if !isRuntimeError(err) {
+						t.Errorf("%s returned an unexpected error type, err was %T", test.name, err)
+						return
+					}
+				} else if isCompilationError(test.expectedError) {
+					if !isCompilationError(err) {
+						t.Errorf("%s returned an unexpected error type, err was %T", test.name, err)
+						return
+					}
+				} else {
+					t.Errorf("%s returned an error that was not expected, error was %T", test.name, err)
+					return
+				}
+
+				assertEquals(test.expectedError.Error(), err.Error(), t)
 				return
-			} else if (err != nil) && (test.wantErr == nil) {
+			} else if (err != nil) && (test.expectedError == nil) {
 				t.Error(err)
 				return
 			}
@@ -253,9 +292,15 @@ func TestRuns(t *testing.T) {
 }
 
 func TestFileIsDeletedAfterRun(t *testing.T) {
-	exec := getNewExecutableForTesting("python", "print('Hello World')", t)
-	fileLocation := "../runner_files/DeletedAfterTestPythonRunner.py"
-	_, err := os.Stat(fileLocation)
+	t.Parallel()
+	exec, err := NewExecutable("python", "print('Hello World')", &FileSettings{
+		FileNamePrefix: "TestFileIsDeletedAfterRun",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	fileLocation := "../runner_files/TestFileIsDeletedAfterRunPythonRunner.py"
+	_, err = os.Stat(fileLocation)
 	if err == nil {
 		t.Fatalf("%s existed before Run() was called", fileLocation)
 	}
