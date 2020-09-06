@@ -65,7 +65,9 @@ func (state *executableState) Run() (string, error) {
 	if err != nil {
 		errorMessage := removeFilePath(stErr.String(), fileLocation)
 		//Remove filename Prefix aswell.
-		errorMessage = strings.ReplaceAll(errorMessage, state.settings.FileNamePrefix, "")
+		if state.settings != nil {
+			errorMessage = strings.ReplaceAll(errorMessage, state.settings.FileNamePrefix, "")
+		}
 		return "", &RuntimeError{errMessage: errorMessage}
 	}
 
