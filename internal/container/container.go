@@ -18,7 +18,7 @@ type BuildImageOptions struct {
 }
 
 //BuildImage rebuilds the docker image. This method takes a very long time to
-//execute and should only be called at initial startup.
+//execute and should only be called at startup.
 func BuildImage(opts *BuildImageOptions) error {
 	dockerfile := opts.Dockerfile
 	tags := opts.Tags
@@ -30,11 +30,6 @@ func BuildImage(opts *BuildImageOptions) error {
 	if err != nil {
 		return err
 	}
-
-	// err := exec.Command("bash", "TarTheDocker.sh").Run()
-	// if err != nil {
-	// 	log.Fatal(err, " :unable to create tar of DockerFile")
-	// }
 
 	cli, err := client.NewEnvClient()
 	if err != nil {

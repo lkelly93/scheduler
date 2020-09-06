@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-//ZipDockerFile zips a given docker fil so it can be used to build a docker
+//tarDockerFile zips a given docker fil so it can be used to build a docker
 //image.
 //filename should be the realitve path to the docker file
 //outName should be the name of the DockerFile you want
@@ -17,7 +17,7 @@ func tarDockerFile(fileName string, outName string) error {
 	//Open File to write tar to
 	out, err := os.Create(outName)
 	if err != nil {
-		log.Fatal(err, " :unable to create tar file.")
+		log.Printf(err.Error())
 	}
 	defer out.Close()
 
