@@ -1,0 +1,2 @@
+Since main.go is the parrent call that will eventually call some Run() on some
+executable. We need to put a runner_files folder here. 

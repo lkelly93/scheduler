@@ -173,7 +173,7 @@ func TestCreateFileAndAddCode(t *testing.T) {
 func TestGetRunnerFileLocation(t *testing.T) {
 	t.Parallel()
 	suffix := "Test.txt"
-	expected := "../runner_files/Test.txt"
+	expected := "runner_files/Test.txt"
 
 	actual := getRunnerFileLocation(suffix)
 

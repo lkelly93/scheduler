@@ -31,6 +31,9 @@ func NewExecutable(lang string, code string, settings *FileSettings) (Executable
 
 //Run runs the given program and then returns the output, this could be the
 //output from a successful run or the error message from an unsuccessful run.
+//Run attempts to put all runner files in a folder called runner_files, which
+//should be located in the same directory as the file that class run.
+//If this is not the case, Run will just put it in the same directory
 func (state *executableState) Run() (string, error) {
 	timeoutInSeconds := 15
 	state.settings = fillRestOfFileSettings(state.lang, state.settings)
