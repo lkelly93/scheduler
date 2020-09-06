@@ -30,6 +30,7 @@ func TestNewExecutable(t *testing.T) {
 			},
 			expected: &executableState{
 				code:     "print('Hello World')",
+				lang:     "python",
 				settings: nil,
 			},
 			expectedError: nil,

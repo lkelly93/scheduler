@@ -19,6 +19,7 @@ type FileSettings struct {
 //executableState holds the state of an Executable
 type executableState struct {
 	code       string
+	lang       string
 	settings   *FileSettings
 	createFile fileCreationFunction
 }

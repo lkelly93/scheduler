@@ -73,10 +73,12 @@ func TestCreateFile(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			if test.args.settings == nil {
-				test.args.settings = &FileSettings{}
-				test.args.settings.FileNamePrefix = test.name
-			}
+			test.args.settings = fillRestOfFileSettings(test.args.lang, test.args.settings)
+			test.args.settings.FileNamePrefix = test.name
+			// if test.args.settings == nil {
+			// 	test.args.settings = &FileSettings{}
+			// 	test.args.settings.FileNamePrefix = test.name
+			// }
 
 			createFileFunction := getFileCreationFunction(test.args.lang)
 			sysCommand, fileLocation, _ := createFileFunction(test.args.code, test.args.settings)
