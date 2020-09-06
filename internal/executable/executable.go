@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -18,6 +19,7 @@ func NewExecutable(lang string, code string, settings *FileSettings) (Executable
 	if function != nil {
 		return &executableState{
 			code:       code,
+			lang:       lang,
 			settings:   settings,
 			createFile: function,
 		}, nil
@@ -31,6 +33,7 @@ func NewExecutable(lang string, code string, settings *FileSettings) (Executable
 //output from a successful run or the error message from an unsuccessful run.
 func (state *executableState) Run() (string, error) {
 	timeoutInSeconds := 15
+	state.settings = fillRestOfFileSettings(state.lang, state.settings)
 	//Create the file and get the data to run it. If sys command is an empty
 	//string then we had a compilation error and the error is stored in the
 	//fileLocation variable.
@@ -63,6 +66,8 @@ func (state *executableState) Run() (string, error) {
 	}
 	if err != nil {
 		errorMessage := removeFilePath(stErr.String(), fileLocation)
+		//Remove FileNamePrefix as well.
+		errorMessage = strings.ReplaceAll(errorMessage, state.settings.FileNamePrefix, "")
 		return "", &RuntimeError{errMessage: errorMessage}
 	}
 

@@ -7,7 +7,6 @@ import (
 
 //Java creates a runnerFile for java languages.
 func createRunnerFileJava(code string, settings *FileSettings) (string, string, error) {
-	settings = fillRestOfFileSettings("java", settings)
 	langCommand := "java"
 	var runnerFileName strings.Builder
 	runnerFileName.WriteString(settings.FileNamePrefix)

@@ -8,6 +8,7 @@ import (
 )
 
 func TestInfiniteRecursion(t *testing.T) {
+	t.Parallel()
 	var code strings.Builder
 	code.WriteString("public static void main(String[] args) {\n")
 	code.WriteString("System.out.println(oops(5));\n")
@@ -18,7 +19,12 @@ func TestInfiniteRecursion(t *testing.T) {
 	code.WriteString("}else{")
 	code.WriteString("return x;\n")
 	code.WriteString("}}")
-	exec := getNewExecutableForTesting("java", code.String(), t)
+	exec, err := NewExecutable("java", code.String(), &FileSettings{
+		FileNamePrefix: "TestInfiniteRecursion",
+	})
+	if err != nil {
+		t.Error(err)
+	}
 
 	expected := "Exception in thread \"main\" java.lang.StackOverflowError\n"
 	_, actual := exec.Run()
@@ -27,20 +33,30 @@ func TestInfiniteRecursion(t *testing.T) {
 	newLineIndex := strings.Index(errorMessage, "\n") + 1
 	errorMessage = errorMessage[:newLineIndex]
 
-	assertRuntimeError(actual, t)
+	if !isRuntimeError(actual) {
+		t.Errorf("Expected *executable.RuntimeError but got %T", err)
+	}
 	assertEquals(expected, errorMessage, t)
 }
 
 func TestInfiniteLoop(t *testing.T) {
+	t.Parallel()
 	var code strings.Builder
 	code.WriteString("x = 5\n")
 	code.WriteString("while(True):\n")
 	code.WriteString("\tx+=1\n")
-	exec := getNewExecutableForTesting("python", code.String(), t)
+	exec, err := NewExecutable("python", code.String(), &FileSettings{
+		FileNamePrefix: "TestInfiniteLoop",
+	})
+	if err != nil {
+		t.Error(err)
+	}
 
 	_, actual := exec.Run()
 	expected := "Time Limit Exceeded 15s"
 
-	assertTimeLimitError(actual, t)
+	if !isTimeLimitError(actual) {
+		t.Errorf("Expected *executable.TimeLimitError but got %T", err)
+	}
 	assertEquals(expected, actual.Error(), t)
 }

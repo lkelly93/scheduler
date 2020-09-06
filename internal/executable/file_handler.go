@@ -35,6 +35,10 @@ func fillRestOfFileSettings(lang string, settings *FileSettings) *FileSettings {
 		settings.TrailingCode = defaults.TrailingCode
 	}
 
+	if settings.FileNamePrefix == "" {
+		settings.FileNamePrefix = defaults.FileNamePrefix
+	}
+
 	return settings
 }
 

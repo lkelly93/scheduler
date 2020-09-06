@@ -6,63 +6,99 @@ import (
 	"testing"
 )
 
-func TestPythonCreateFile(t *testing.T) {
-	lang := "python"
-	code := "print('Hello World')"
-	expected := "python3 ../runner_files/PythonRunner.py"
-
-	genericCreateFile(lang, code, expected, t)
-}
-
-func TestPythonCreateFileCustomFileSettings(t *testing.T) {
-	lang := "python"
-	code := "print('Hello World')"
-	fileSettings := FileSettings{
-		Imports:        "",
-		ClassName:      "SillyPythonName",
-		TrailingCode:   "",
-		FileNamePrefix: "PREFIX",
+func TestCreateFile(t *testing.T) {
+	type args struct {
+		lang     string
+		code     string
+		settings *FileSettings
 	}
-	expectedRunnerFile := "../runner_files/PREFIXSillyPythonName.py"
-
-	function := getFileCreationFunction(lang)
-	_, fileLocation, _ := function(code, &fileSettings)
-	os.Remove(fileLocation)
-
-	assertEquals(expectedRunnerFile, fileLocation, t)
-}
-func TestJavaCreateFileCustomFileSettings(t *testing.T) {
-	lang := "java"
-	code := "public static void main(String[] args){System.out.println(\"Hello World\");}"
-	fileSettings := FileSettings{
-		Imports:        "",
-		ClassName:      "SillyJavaName",
-		TrailingCode:   "",
-		FileNamePrefix: "PREFIX",
+	allTests := []struct {
+		name     string
+		args     args
+		expected string
+	}{
+		{
+			name: "TestPythonCreateFile",
+			args: args{
+				lang:     "python",
+				code:     "print('Hello World')",
+				settings: nil,
+			},
+			expected: "python3 " + getRunnerFileLocation("TestPythonCreateFilePythonRunner.py"),
+		},
+		{
+			name: "TestPythonCreateFileCustomFileSetttings",
+			args: args{
+				lang: "python",
+				code: "print('Hello World')",
+				settings: &FileSettings{
+					Imports:        "",
+					ClassName:      "SillyPythonName",
+					TrailingCode:   "",
+					FileNamePrefix: "TestPythonCreateFileCustomFileSetttings",
+				},
+			},
+			expected: "python3 " + getRunnerFileLocation("TestPythonCreateFileCustomFileSetttingsSillyPythonName.py"),
+		},
+		{
+			name: "TestJavaCreateFile",
+			args: args{
+				lang:     "java",
+				code:     "public static void main(String[] args){System.out.println(\"Hello World\");}",
+				settings: nil,
+			},
+			expected: "java " + getRunnerFileLocation("TestJavaCreateFileJavaRunner.java"),
+		},
+		{
+			name: "TestJavaCreateFileCustomFileSettings",
+			args: args{
+				lang: "java",
+				code: "public static void main(String[] args){System.out.println(\"Hello World\");}",
+				settings: &FileSettings{
+					Imports:        "",
+					ClassName:      "SillyJavaName",
+					TrailingCode:   "",
+					FileNamePrefix: "TestJavaCreateFileCustomFileSettings",
+				},
+			},
+			expected: "java " + getRunnerFileLocation("TestJavaCreateFileCustomFileSettingsSillyJavaName.java"),
+		},
 	}
-	expectedRunnerFile := "../runner_files/PREFIXSillyJavaName.java"
 
-	function := getFileCreationFunction(lang)
-	_, fileLocation, _ := function(code, &fileSettings)
-	os.Remove(fileLocation)
+	for _, test := range allTests {
+		//The below line of code is needed because of a Go gotcha hidden inside
+		//the go testing framework.
+		//Read https://gist.github.com/posener/92a55c4cd441fc5e5e85f27bca008721
+		//For more information.
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			test.args.settings = fillRestOfFileSettings(test.args.lang, test.args.settings)
+			test.args.settings.FileNamePrefix = test.name
+			// if test.args.settings == nil {
+			// 	test.args.settings = &FileSettings{}
+			// 	test.args.settings.FileNamePrefix = test.name
+			// }
 
-	assertEquals(expectedRunnerFile, fileLocation, t)
-}
+			createFileFunction := getFileCreationFunction(test.args.lang)
+			sysCommand, fileLocation, _ := createFileFunction(test.args.code, test.args.settings)
+			defer os.Remove(fileLocation)
+			actual := sysCommand + " " + fileLocation
 
-func TestJavaCreateFile(t *testing.T) {
-	lang := "java"
-	code := "public static void main(String[] args){System.out.println(\"Hello World\");}"
-	expected := "java ../runner_files/JavaRunner.java"
-
-	genericCreateFile(lang, code, expected, t)
+			assertEquals(test.expected, actual, t)
+		})
+	}
 }
 
 func TestCreateRunnerFile(t *testing.T) {
+	t.Parallel()
 	lang := "python"
 	code := "print('Hello World')"
 
 	createFileFunction := getFileCreationFunction(lang)
-	_, fileLocation, _ := createFileFunction(code, nil)
+	_, fileLocation, _ := createFileFunction(code, &FileSettings{
+		FileNamePrefix: "TestCreateRunnerFile",
+	})
 	defer os.Remove(fileLocation)
 
 	_, err := os.Stat(fileLocation)
@@ -72,6 +108,7 @@ func TestCreateRunnerFile(t *testing.T) {
 }
 
 func TestRemoveFilePath(t *testing.T) {
+	t.Parallel()
 	message := "/path/to/runner/file/PythonRunner.py had an error Python();<_aRunner.py"
 	expected := "PythonRunner.py had an error Python();<_aRunner.py"
 	mockFilePath := "/path/to/runner/file/PythonRunner.py"
@@ -81,6 +118,7 @@ func TestRemoveFilePath(t *testing.T) {
 }
 
 func TestAllSupportedDefaultSettingsJava(t *testing.T) {
+	t.Parallel()
 	actual := fileSettingsDefaults["java"]
 	expected := FileSettings{
 		Imports:        "import java.util.*;",
@@ -96,6 +134,7 @@ func TestAllSupportedDefaultSettingsJava(t *testing.T) {
 }
 
 func TestAllSupportedDefaultSettingsPython(t *testing.T) {
+	t.Parallel()
 	actual := fileSettingsDefaults["python"]
 	expected := FileSettings{
 		Imports:        "import numpy as np",
@@ -111,7 +150,8 @@ func TestAllSupportedDefaultSettingsPython(t *testing.T) {
 }
 
 func TestCreateFileAndAddCode(t *testing.T) {
-	outFile := "Test.txt"
+	t.Parallel()
+	outFile := "TestCreateFileAndAddCode.txt"
 	code := "This is a test\n"
 
 	err := createFileAndAddCode(outFile, code)
@@ -127,29 +167,15 @@ func TestCreateFileAndAddCode(t *testing.T) {
 	}
 
 	fileText := string(file)
-
-	if fileText != code {
-		t.Errorf("Runner file text was not correct.")
-	}
+	assertEquals(code, fileText, t)
 }
 
 func TestGetRunnerFileLocation(t *testing.T) {
+	t.Parallel()
 	suffix := "Test.txt"
 	expected := "../runner_files/Test.txt"
 
 	actual := getRunnerFileLocation(suffix)
-
-	assertEquals(expected, actual, t)
-}
-
-// /****** Supporting Methods ******/
-func genericCreateFile(lang string, code string, expected string, t *testing.T) {
-	createFileFunction := getFileCreationFunction(lang)
-
-	sysCommand, fileLocation, _ := createFileFunction(code, nil)
-	defer os.Remove(fileLocation)
-
-	actual := sysCommand + " " + fileLocation
 
 	assertEquals(expected, actual, t)
 }
