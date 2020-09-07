@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
 
@@ -19,6 +20,7 @@ type BuildImageOptions struct {
 
 //BuildImage rebuilds the docker image. This method takes a very long time to
 //execute and should only be called at startup.
+//This method returns the image
 func BuildImage(opts *BuildImageOptions) error {
 	dockerfile := opts.Dockerfile
 	tags := opts.Tags
@@ -69,4 +71,50 @@ func BuildImage(opts *BuildImageOptions) error {
 	}
 
 	return nil
+}
+
+//StartNewSchedulerOptions represents the options for StartNewScheduler
+type StartNewSchedulerOptions struct {
+	ImageID       string
+	SchedulerName string
+}
+
+//StartNewScheduler starts a new scheduler with the given options.
+//returns the IP address for the given scheduler and the port it is listening
+//on
+func StartNewScheduler(opts *StartNewSchedulerOptions) (string, error) {
+	ctx := context.Background()
+	cli, err := client.NewEnvClient()
+	networkMode := "scheduler-cluster"
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := cli.ContainerCreate(
+		ctx,
+		&container.Config{
+			Image: opts.ImageID,
+		},
+		&container.HostConfig{
+			NetworkMode: container.NetworkMode(networkMode),
+		},
+		nil,
+		opts.SchedulerName,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	//Get container IP
+	info, err := cli.ContainerInspect(ctx, resp.ID)
+	if err != nil {
+		return "", err
+	}
+	return info.NetworkSettings.Networks[networkMode].IPAddress, nil
 }
