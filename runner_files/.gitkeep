@@ -1,2 +1,0 @@
-Since main.go is the parent call that will eventually call some Run() on some
-executable. We need to put a runner_files folder here. 
