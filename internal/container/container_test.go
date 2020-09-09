@@ -1,3 +1,4 @@
+// +build !longTests
 package container_test
 
 import (
