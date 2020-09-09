@@ -11,7 +11,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/lkelly93/scheduler/pkg/container"
+	"github.com/lkelly93/scheduler/internal/container"
 )
 
 func TestStartNewScheduler(t *testing.T) {

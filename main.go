@@ -3,6 +3,6 @@ package main
 import "github.com/lkelly93/scheduler/internal/server"
 
 func main() {
-    server := server.NewHTTPServer()
-    server.Start(3000)
+	server := server.NewHTTPServer()
+	server.Start(3000)
 }
