@@ -16,7 +16,7 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=lkelly93/scheduler_image
-          VERSION=edge
+          VERSION=latest
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           fi
