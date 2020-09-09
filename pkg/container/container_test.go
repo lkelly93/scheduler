@@ -11,60 +11,13 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/lkelly93/scheduler/internal/container"
+	"github.com/lkelly93/scheduler/pkg/container"
 )
 
-func TestBuildStandardImage(t *testing.T) {
-	imageTag := "build_image_test_image:latest"
-	buildOptions := container.BuildImageOptions{
-		Dockerfile: "Dockerfile_standard",
-		Tags:       []string{imageTag},
-	}
-	err := container.BuildImage(&buildOptions)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	images, err := cli.ImageList(context.Background(), types.ImageListOptions{})
-
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	foundImage := false
-	for _, image := range images {
-		if image.RepoTags[0] == imageTag {
-			foundImage = true
-		}
-	}
-	if !foundImage {
-		t.Fatal("The image was not built")
-	}
-
-	//Cleanup test image.
-	_, err = cli.ImageRemove(context.Background(), imageTag, types.ImageRemoveOptions{
-		Force:         true,
-		PruneChildren: true,
-	})
-
-	if err != nil {
-		t.Errorf("Could not remove image, this may be because it was not created")
-	}
-}
-
 func TestStartNewScheduler(t *testing.T) {
-	opts := container.StartNewSchedulerOptions{
-		ImageID:       "scheduler:latest",
-		SchedulerName: "scheduler1",
-	}
-
-	addr, err := container.StartNewScheduler(&opts)
-	// defer cleanupContainer(opts.SchedulerName, t)
+	schedulerName := "scheduler1"
+	addr, err := container.StartNewScheduler(schedulerName)
+	defer cleanupContainer(schedulerName, t)
 	if err != nil {
 		t.Error(err)
 		t.Fatalf("Could not create container.")
@@ -125,5 +78,3 @@ func cleanupContainer(SchedulerName string, t *testing.T) {
 		t.Errorf("Could not remove %s", SchedulerName)
 	}
 }
-
-//TODO write tests for TarDockerFile
