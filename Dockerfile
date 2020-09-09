@@ -2,14 +2,22 @@ FROM ubuntu:20.04
 
 RUN apt-get update -y
 
+#Configure tzdata
+ARG DEBIAN_FRONTEND="noninteractive" 
+ENV TZ=America/Tijuana
+RUN apt-get install -y tzdata
+
 #Install needed packages
-RUN apt-get install software-properties-common -y
-RUN apt-get install python3 -y
+RUN apt-get install -y \ 
+python3 \
+default-jre \
+golang \
+git 
+
 RUN apt-get update -y 
-RUN apt-get install python3-pip -y
-RUN apt-get install default-jre -y
-RUN apt-get install golang -y 
-RUN apt-get install git -y 
+
+RUN apt-get install -y \
+python3-pip
 
 #Install language dependacies
     #Python
