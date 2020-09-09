@@ -22,7 +22,8 @@ func createRunnerFilePython(code string, settings *FileSettings) (string, string
 	err := createFileAndAddCode(outFileName, formattedCode.String())
 
 	if err != nil {
-		log.Fatal("Could not create runner file!")
+		log.Println("Could not create runner file!")
+		log.Println(err.Error())
 	}
 	return langCommand, outFileName, nil
 }

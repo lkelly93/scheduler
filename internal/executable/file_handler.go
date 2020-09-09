@@ -62,8 +62,11 @@ func createFileAndAddCode(outFileName string, code string) error {
 //getRunnerFileLocation returns a the string used to create the file runner in
 //the system.
 func getRunnerFileLocation(fileName string) string {
-	var location strings.Builder
-	location.WriteString("../runner_files/")
-	location.WriteString(fileName)
-	return location.String()
+	if _, err := os.Stat("runner_files"); !os.IsNotExist(err) {
+		var location strings.Builder
+		location.WriteString("runner_files/")
+		location.WriteString(fileName)
+		return location.String()
+	}
+	return fileName
 }
