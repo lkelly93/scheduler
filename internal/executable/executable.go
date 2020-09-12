@@ -5,10 +5,14 @@ package executable
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/docker/docker/pkg/reexec"
 )
 
 //NewExecutable creates a new executable with the given settings and code.
@@ -75,4 +79,35 @@ func (state *executableState) Run() (string, error) {
 	}
 
 	return string(stOut.String()), nil
+}
+
+func initReexec() {
+	reexec.Register("initContainer", initContainer)
+	if reexec.Init() {
+		os.Exit(0)
+	}
+}
+
+func initContainer() {
+
+}
+
+func runProgramInContainer(sysCommand string, fileLocation string) {
+	cmd := exec.Command(sysCommand, fileLocation)
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+
+	if err != nil {
+		fmt.Print(err)
+	}
+}
+
+func must(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }
