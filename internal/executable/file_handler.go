@@ -62,7 +62,7 @@ func createFileAndAddCode(outFileName string, code string) error {
 //getRunnerFileLocation returns a the string used to create the file runner in
 //the system.
 func getRunnerFileLocation(fileName string) string {
-	dir := "/securefs/runnerfiles/"
+	dir := "/securefs/runner_files/"
 	if _, err := os.Stat(dir); !os.IsNotExist(err) {
 		var location strings.Builder
 		location.WriteString(dir)

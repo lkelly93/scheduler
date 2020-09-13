@@ -109,6 +109,7 @@ func initContainer() {
 
 	sysCommand := os.Args[1]
 	fileLocation := os.Args[2]
+	fileLocation = strings.ReplaceAll(fileLocation, "/securefs/", "/")
 	runProgramInContainer(sysCommand, fileLocation)
 }
 
