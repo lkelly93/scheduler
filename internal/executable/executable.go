@@ -4,13 +4,11 @@ package executable
 
 import (
 	"bytes"
-	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
+	"syscall"
 
 	"github.com/docker/docker/pkg/reexec"
 )
@@ -39,7 +37,7 @@ func NewExecutable(lang string, code string, settings *FileSettings) (Executable
 //should be located in the same directory as the file that class run.
 //If this is not the case, Run will just put it in the same directory
 func (state *executableState) Run() (string, error) {
-	timeoutInSeconds := 15
+	initReexec()
 	state.settings = fillRestOfFileSettings(state.lang, state.settings)
 	//Create the file and get the data to run it. If sys command is an empty
 	//string then we had a compilation error and the error is stored in the
@@ -51,26 +49,44 @@ func (state *executableState) Run() (string, error) {
 	//Remove the old files
 	defer os.Remove(fileLocation)
 
-	ctx, cancel := context.WithTimeout(
-		context.Background(),
-		time.Duration(15)*time.Second)
-
-	defer cancel()
-
 	//Get the system resources to run the command
-	command := exec.CommandContext(ctx, sysCommand, fileLocation)
+	cmd := reexec.Command("initContainer", sysCommand, fileLocation)
 
 	var stOut bytes.Buffer
 	var stErr bytes.Buffer
 
-	command.Stdout = &stOut
-	command.Stderr = &stErr
+	cmd.Stdout = &stOut
+	cmd.Stderr = &stErr
+
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Cloneflags: syscall.CLONE_NEWNS |
+			syscall.CLONE_NEWUTS |
+			syscall.CLONE_NEWIPC |
+			syscall.CLONE_NEWPID |
+			syscall.CLONE_NEWNET |
+			syscall.CLONE_NEWUSER,
+		UidMappings: []syscall.SysProcIDMap{
+			{
+				ContainerID: 0,
+				HostID:      os.Getuid(),
+				Size:        1,
+			},
+		},
+		GidMappings: []syscall.SysProcIDMap{
+			{
+				ContainerID: 0,
+				HostID:      os.Getgid(),
+				Size:        1,
+			},
+		},
+	}
 
 	//Run the command and get the stdOut/stdErr
-	err = command.Run()
-	if ctx.Err() == context.DeadlineExceeded {
-		return "", &TimeLimitExceededError{maxTime: timeoutInSeconds}
-	}
+	err = cmd.Run()
+	// timeoutInSeconds := 15
+	// if ctx.Err() == context.DeadlineExceeded {
+	// 	return "", &TimeLimitExceededError{maxTime: timeoutInSeconds}
+	// }
 	if err != nil {
 		errorMessage := removeFilePath(stErr.String(), fileLocation)
 		//Remove FileNamePrefix as well.
@@ -89,7 +105,11 @@ func initReexec() {
 }
 
 func initContainer() {
+	setupInternalContainer()
 
+	sysCommand := os.Args[1]
+	fileLocation := os.Args[2]
+	runProgramInContainer(sysCommand, fileLocation)
 }
 
 func runProgramInContainer(sysCommand string, fileLocation string) {
@@ -103,11 +123,5 @@ func runProgramInContainer(sysCommand string, fileLocation string) {
 
 	if err != nil {
 		fmt.Print(err)
-	}
-}
-
-func must(err error) {
-	if err != nil {
-		log.Fatal(err)
 	}
 }
