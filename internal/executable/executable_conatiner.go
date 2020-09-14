@@ -1,9 +1,9 @@
 package executable
 
 import (
-	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"syscall"
 )
 
@@ -13,13 +13,9 @@ type configSettings struct {
 }
 
 func (cs *configSettings) setupInternalContainer() {
+	mountProc(cs.rootLoc)
 	changeHostName(cs.hostname)
 	changeRoot(cs.rootLoc)
-}
-
-func (cs *configSettings) tearDownInteralContainer() {
-	fmt.Print("\n\n>>>Tearown happens here<<<\n\n")
-	return
 }
 
 func changeHostName(name string) {
@@ -31,8 +27,16 @@ func changeRoot(newRoot string) {
 	must(os.Chdir("/"))
 }
 
-func mountProc() {
-	return
+func mountProc(rootLocation string) {
+	source := "proc"
+	target := filepath.Join(rootLocation, "/proc")
+	// fmt.Printf("%s\n", target)
+	fstype := "proc"
+	flags := uintptr(0)
+	data := ""
+
+	os.MkdirAll(target, 0755)
+	must(syscall.Mount(source, target, fstype, flags, data))
 }
 
 func must(err error) {
