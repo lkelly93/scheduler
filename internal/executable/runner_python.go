@@ -8,11 +8,11 @@ import (
 //Python creates a runnerFile for python languages.
 func createRunnerFilePython(code string, settings *FileSettings) (string, string, error) {
 	langCommand := "python3"
-	var fileName strings.Builder
-	fileName.WriteString(settings.FileNamePrefix)
-	fileName.WriteString(settings.ClassName)
-	fileName.WriteString(".py")
-	outFileName := getRunnerFileLocation(fileName.String())
+	var runnerFileName strings.Builder
+	runnerFileName.WriteString(settings.FileNamePrefix)
+	runnerFileName.WriteString(settings.ClassName)
+	runnerFileName.WriteString(".py")
+	outFileName := getRunnerFileLocation(runnerFileName.String())
 
 	var formattedCode strings.Builder
 	insertImportsPython(&formattedCode, settings)
