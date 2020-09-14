@@ -2,11 +2,19 @@
 //This package can run the given program and return the result
 package executable
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestDebug(t *testing.T) {
 	lang := "python"
-	code := "os.system(\"hostname\")"
+	var codeBuilder strings.Builder
+	codeBuilder.WriteString("os.system(\"hostname\")\n")
+	codeBuilder.WriteString("os.system(\"uname -a\")\n")
+	// codeBuilder.WriteString("os.system(\"cat /proc/mounts\")\n")
+	code := codeBuilder.String()
+	// code := "while(True):\n\tx=5"
 	settings := FileSettings{
 		Imports: "import os",
 	}
@@ -14,9 +22,9 @@ func TestDebug(t *testing.T) {
 
 	out, err := exe.Run()
 	if err != nil {
-		t.Errorf("Error: %s", err)
+		t.Errorf("Error:\n%s", err)
 	}
-	t.Errorf("Output: %s", out)
+	t.Errorf("Output:\n%s", out)
 }
 
 // import (

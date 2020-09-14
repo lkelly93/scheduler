@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/docker/docker/pkg/reexec"
 )
@@ -52,11 +53,11 @@ func (state *executableState) Run() (string, error) {
 	//Get the system resources to run the command
 	cmd := reexec.Command("initContainer", sysCommand, fileLocation)
 
-	var stOut bytes.Buffer
-	var stErr bytes.Buffer
+	var stdOut bytes.Buffer
+	var stdErr bytes.Buffer
 
-	cmd.Stdout = &stOut
-	cmd.Stderr = &stErr
+	cmd.Stdout = &stdOut
+	cmd.Stderr = &stdErr
 
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWNS |
@@ -82,19 +83,29 @@ func (state *executableState) Run() (string, error) {
 	}
 
 	//Run the command and get the stdOut/stdErr
-	err = cmd.Run()
-	// timeoutInSeconds := 15
-	// if ctx.Err() == context.DeadlineExceeded {
-	// 	return "", &TimeLimitExceededError{maxTime: timeoutInSeconds}
-	// }
-	if err != nil {
-		errorMessage := removeFilePath(stErr.String(), fileLocation)
-		//Remove FileNamePrefix as well.
-		errorMessage = strings.ReplaceAll(errorMessage, state.settings.FileNamePrefix, "")
-		return "", &RuntimeError{errMessage: errorMessage}
+	err = cmd.Start()
+
+	done := make(chan error)
+	go func() { done <- cmd.Wait() }()
+
+	timeoutInSeconds := 15
+	timeout := time.After(time.Duration(timeoutInSeconds) * time.Second)
+
+	select {
+	case <-timeout:
+		cmd.Process.Kill()
+		return "", &TimeLimitExceededError{maxTime: timeoutInSeconds}
+	case <-done:
+		if stdErr.Len() != 0 {
+			errorMessage := removeFilePath(stdErr.String(), fileLocation)
+			//Remove FileNamePrefix as well.
+			errorMessage = strings.ReplaceAll(errorMessage, state.settings.FileNamePrefix, "")
+			return "", &RuntimeError{errMessage: errorMessage}
+		}
+
 	}
 
-	return string(stOut.String()), nil
+	return string(stdOut.String()), nil
 }
 
 func initReexec() {
@@ -105,12 +116,21 @@ func initReexec() {
 }
 
 func initContainer() {
-	setupInternalContainer()
+	containerSettings := configSettings{
+		hostname: "runner",
+		rootLoc:  "/securefs",
+	}
+
+	containerSettings.setupInternalContainer()
 
 	sysCommand := os.Args[1]
 	fileLocation := os.Args[2]
-	fileLocation = strings.ReplaceAll(fileLocation, "/securefs/", "/")
+	fileLocation = strings.ReplaceAll(fileLocation,
+		containerSettings.rootLoc,
+		"/")
 	runProgramInContainer(sysCommand, fileLocation)
+
+	containerSettings.tearDownInteralContainer()
 }
 
 func runProgramInContainer(sysCommand string, fileLocation string) {
