@@ -1,3 +1,5 @@
 .vim/
 .vscode/
-LimitedDockerFile
+LimitedDockerfile
+securefs.tar.gz
+

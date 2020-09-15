@@ -4,15 +4,13 @@ package executable
 
 import (
 	"bytes"
-	"fmt"
+	"context"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
 	"time"
-
-	"github.com/docker/docker/pkg/reexec"
 )
 
 //NewExecutable creates a new executable with the given settings and code.
@@ -45,17 +43,29 @@ func (state *executableState) Run() (string, error) {
 	//fileLocation variable.
 	sysCommand, fileLocation, err := state.createFile(state.code, state.settings)
 	if err != nil {
-		return "", err
+		log.Println(err)
+		return "", &CompilationError{errMessage: err.Error()}
 	}
 	//Remove the old files
 	defer os.Remove(fileLocation)
 
+	timeoutInSeconds := 15
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		time.Duration(timeoutInSeconds)*time.Second,
+	)
+	defer cancel()
+
 	//Get the system resources to run the command
-	cmd := reexec.Command("initContainer", sysCommand, fileLocation)
+	cmd := exec.CommandContext(
+		ctx,
+		"executable_container",
+		sysCommand,
+		fileLocation,
+	)
 
 	var stdOut bytes.Buffer
 	var stdErr bytes.Buffer
-
 	cmd.Stdout = &stdOut
 	cmd.Stderr = &stdErr
 
@@ -83,83 +93,23 @@ func (state *executableState) Run() (string, error) {
 	}
 
 	//Run the command and get the stdOut/stdErr
-	err = cmd.Start()
-
-	done := make(chan error)
-	go func() { done <- cmd.Wait() }()
-
-	timeoutInSeconds := 15
-	timeout := time.After(time.Duration(timeoutInSeconds) * time.Second)
-
-	select {
-	case <-timeout:
-		cmd.Process.Kill()
-		return "", &TimeLimitExceededError{maxTime: timeoutInSeconds}
-	case <-done:
-		if stdErr.Len() != 0 {
-			//Remove FileNamePrefix.
-			errorMessage := strings.ReplaceAll(stdErr.String(), state.settings.FileNamePrefix, "")
-
-			//Remove time/date stamp at begging of message
-			sizeOfDateTimeStamp := 20
-			errorMessage = errorMessage[sizeOfDateTimeStamp:]
-
-			//Finally return a RuntimeError
-			return stdOut.String(), &RuntimeError{errMessage: errorMessage}
-		}
-
-	}
-
-	return string(stdOut.String()), nil
-}
-
-//Init must be called once before the first time you run any executable. Call it
-//before you call your first executable. If you call Init() again it will panic
-func Init() {
-	initReexec()
-}
-
-func initReexec() {
-	reexec.Register("initContainer", initContainer)
-	if reexec.Init() {
-		os.Exit(0)
-	}
-}
-
-func initContainer() {
-	containerSettings := configSettings{
-		hostname: "runner",
-		rootLoc:  "/securefs",
-	}
-
-	containerSettings.setupInternalContainer()
-
-	sysCommand := os.Args[1]
-	fileLocation := os.Args[2]
-	fileLocation = strings.ReplaceAll(fileLocation,
-		containerSettings.rootLoc,
-		"")
-	runProgramInContainer(sysCommand, fileLocation)
-}
-
-func runProgramInContainer(sysCommand string, fileLocation string) {
-	cmd := exec.Command(sysCommand, fileLocation)
-
-	var stdErr bytes.Buffer
-	var stdOut bytes.Buffer
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = &stdOut
-	cmd.Stderr = &stdErr
-
-	err := cmd.Run()
-	// index := strings.Index(fileLocation, "/runner_files/") + 14
-	// fileName := fileLocation[index:]
-	// log.Print(fileName)
-
+	// log.Panicln(cmd.Path)
+	err = cmd.Run()
 	if err != nil {
-		log.Print(removeFilePath(stdErr.String(), fileLocation))
+		log.Println(err)
+		return "", &RuntimeError{errMessage: err.Error()}
 	}
 
-	fmt.Print(removeFilePath(stdOut.String(), fileLocation))
+	if ctx.Err() == context.DeadlineExceeded {
+		return stdOut.String(), &TimeLimitExceededError{maxTime: timeoutInSeconds}
+	}
+	if stdErr.Len() != 0 {
+		errorMessage := strings.ReplaceAll(stdErr.String(), state.settings.FileNamePrefix, "")
 
+		sizeOfDateTiemStamp := 20
+		errorMessage = errorMessage[sizeOfDateTiemStamp:]
+
+		return stdOut.String(), &RuntimeError{errMessage: errorMessage}
+	}
+	return string(stdOut.String()), nil
 }

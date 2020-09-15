@@ -42,13 +42,6 @@ func fillRestOfFileSettings(lang string, settings *FileSettings) *FileSettings {
 	return settings
 }
 
-//removeFilePath removes the file path from the error text of an executable.
-func removeFilePath(stdErr string, fileLocation string) string {
-	indexSlash := strings.LastIndex(fileLocation, "/") + 1
-	stdErr = strings.ReplaceAll(stdErr, fileLocation, fileLocation[indexSlash:])
-	return stdErr
-}
-
 //createFileAndAddCode creates the runner file and adds the code to the file
 func createFileAndAddCode(outFileName string, code string) error {
 	runnerFile, err := os.Create(outFileName)

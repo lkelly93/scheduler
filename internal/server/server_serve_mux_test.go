@@ -6,22 +6,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/lkelly93/scheduler/internal/executable"
 )
 
 /////////////
 // Utility //
 /////////////
-
-func TestMain(m *testing.M) {
-	executable.Init()
-	os.Exit(m.Run())
-}
 
 type responseWrapper struct {
 	res *http.Response

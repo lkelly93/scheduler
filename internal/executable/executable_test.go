@@ -10,9 +10,7 @@ import (
 	"testing"
 )
 
-func TestMain(m *testing.M) {
-	Init()
-	os.Exit(m.Run())
+func TestDebug(t *testing.T) {
 }
 
 func TestNewExecutable(t *testing.T) {
