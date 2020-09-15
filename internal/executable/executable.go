@@ -5,6 +5,7 @@ package executable
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -38,7 +39,6 @@ func NewExecutable(lang string, code string, settings *FileSettings) (Executable
 //should be located in the same directory as the file that class run.
 //If this is not the case, Run will just put it in the same directory
 func (state *executableState) Run() (string, error) {
-	initReexec()
 	state.settings = fillRestOfFileSettings(state.lang, state.settings)
 	//Create the file and get the data to run it. If sys command is an empty
 	//string then we had a compilation error and the error is stored in the
@@ -97,15 +97,26 @@ func (state *executableState) Run() (string, error) {
 		return "", &TimeLimitExceededError{maxTime: timeoutInSeconds}
 	case <-done:
 		if stdErr.Len() != 0 {
-			errorMessage := removeFilePath(stdErr.String(), fileLocation)
-			//Remove FileNamePrefix as well.
-			errorMessage = strings.ReplaceAll(errorMessage, state.settings.FileNamePrefix, "")
-			return "", &RuntimeError{errMessage: errorMessage}
+			//Remove FileNamePrefix.
+			errorMessage := strings.ReplaceAll(stdErr.String(), state.settings.FileNamePrefix, "")
+
+			//Remove time/date stamp at begging of message
+			sizeOfDateTimeStamp := 20
+			errorMessage = errorMessage[sizeOfDateTimeStamp:]
+
+			//Finally return a RuntimeError
+			return stdOut.String(), &RuntimeError{errMessage: errorMessage}
 		}
 
 	}
 
 	return string(stdOut.String()), nil
+}
+
+//Init must be called once before the first time you run any executable. Call it
+//before you call your first executable. If you call Init() again it will panic
+func Init() {
+	initReexec()
 }
 
 func initReexec() {
@@ -127,22 +138,28 @@ func initContainer() {
 	fileLocation := os.Args[2]
 	fileLocation = strings.ReplaceAll(fileLocation,
 		containerSettings.rootLoc,
-		"/")
+		"")
 	runProgramInContainer(sysCommand, fileLocation)
-
-	containerSettings.tearDownInteralContainer()
 }
 
 func runProgramInContainer(sysCommand string, fileLocation string) {
 	cmd := exec.Command(sysCommand, fileLocation)
 
+	var stdErr bytes.Buffer
+	var stdOut bytes.Buffer
 	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &stdOut
+	cmd.Stderr = &stdErr
 
 	err := cmd.Run()
+	// index := strings.Index(fileLocation, "/runner_files/") + 14
+	// fileName := fileLocation[index:]
+	// log.Print(fileName)
 
 	if err != nil {
-		fmt.Print(err)
+		log.Print(removeFilePath(stdErr.String(), fileLocation))
 	}
+
+	fmt.Print(removeFilePath(stdOut.String(), fileLocation))
+
 }
