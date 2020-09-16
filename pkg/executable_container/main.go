@@ -56,6 +56,7 @@ func runProgramInContainer(sysCommand string, fileLocation string) {
 
 func (cs *configSettings) setupInternalContainer() {
 	mountProc(cs.rootLoc)
+	// mountSys(cs.rootLoc)
 	changeHostName(cs.hostname)
 	changeRoot(cs.rootLoc)
 }
@@ -76,8 +77,20 @@ func mountProc(rootLocation string) {
 	flags := uintptr(0)
 	data := ""
 
-	os.MkdirAll(target, 0755)
+	must(os.MkdirAll(target, 0755))
 	must(syscall.Mount(source, target, fstype, flags, data))
+}
+
+func mountSys(rootLocation string) {
+	source := "sys"
+	target := filepath.Join(rootLocation, "/proc")
+	fstype := "sysfs"
+	flags := uintptr(0)
+	data := ""
+
+	os.MkdirAll(target, 0755)
+	err := syscall.Mount(source, target, fstype, flags, data)
+	log.Println(err)
 }
 
 func must(err error) {

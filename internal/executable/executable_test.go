@@ -13,7 +13,9 @@ import (
 func TestDebug(t *testing.T) {
 	lang := "python"
 	var codeBuilder strings.Builder
-	codeBuilder.WriteString("os.system(\"cat /proc/mounts\")\n")
+	codeBuilder.WriteString("os.system(\"ls /sys\")\n")
+	// codeBuilder.WriteString("os.system(\"ps\")\n")
+	codeBuilder.WriteString("print(\"Hello World\")")
 	code := codeBuilder.String()
 	exe, _ := NewExecutable(lang, code, &FileSettings{
 		Imports: "import os",

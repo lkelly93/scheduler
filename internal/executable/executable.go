@@ -97,7 +97,9 @@ func (state *executableState) Run() (string, error) {
 	err = cmd.Run()
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
-			return stdOut.String(), &TimeLimitExceededError{maxTime: timeoutInSeconds}
+			err := &TimeLimitExceededError{maxTime: timeoutInSeconds}
+			log.Println(err)
+			return stdOut.String(), err
 		}
 		log.Println(err)
 		return "", &RuntimeError{errMessage: err.Error()}
@@ -109,7 +111,9 @@ func (state *executableState) Run() (string, error) {
 		sizeOfDateTiemStamp := 20
 		errorMessage = errorMessage[sizeOfDateTiemStamp:]
 
-		return stdOut.String(), &RuntimeError{errMessage: errorMessage}
+		err := &RuntimeError{errMessage: errorMessage}
+		log.Println(err)
+		return stdOut.String(), err
 	}
 	return string(stdOut.String()), nil
 }
