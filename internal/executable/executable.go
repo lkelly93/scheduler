@@ -96,13 +96,13 @@ func (state *executableState) Run() (string, error) {
 	// log.Panicln(cmd.Path)
 	err = cmd.Run()
 	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return stdOut.String(), &TimeLimitExceededError{maxTime: timeoutInSeconds}
+		}
 		log.Println(err)
 		return "", &RuntimeError{errMessage: err.Error()}
 	}
 
-	if ctx.Err() == context.DeadlineExceeded {
-		return stdOut.String(), &TimeLimitExceededError{maxTime: timeoutInSeconds}
-	}
 	if stdErr.Len() != 0 {
 		errorMessage := strings.ReplaceAll(stdErr.String(), state.settings.FileNamePrefix, "")
 
