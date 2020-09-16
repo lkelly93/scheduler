@@ -6,6 +6,7 @@ FROM ubuntu:20.04
 ###############################
 RUN apt-get update -y
 
+
 #Configure tzdata
 ARG DEBIAN_FRONTEND="noninteractive" 
 ENV TZ=America/Tijuana
