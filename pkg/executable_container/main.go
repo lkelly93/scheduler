@@ -76,7 +76,7 @@ func mountProc(rootLocation string) {
 	flags := uintptr(0)
 	data := ""
 
-	os.MkdirAll(target, 0755)
+	must(os.MkdirAll(target, 0755))
 	must(syscall.Mount(source, target, fstype, flags, data))
 }
 
