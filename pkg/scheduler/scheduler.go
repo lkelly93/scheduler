@@ -1,7 +1,7 @@
 package scheduler
 
 import (
-	"github.com/lkelly93/scheduler/internal/container"
+	container "github.com/lkelly93/scheduler/internal/server_container"
 )
 
 //StartNewScheduler starts a new scheduler with the given options.

@@ -25,9 +25,7 @@ func createRunnerFileJava(code string, settings *FileSettings) (string, string, 
 		log.Println(err.Error())
 	}
 
-	return langCommand,
-		runnerFileLocation,
-		nil
+	return langCommand, runnerFileLocation, nil
 }
 
 func insertImportsJava(formattedCode *strings.Builder, settings *FileSettings) {

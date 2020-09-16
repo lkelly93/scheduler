@@ -107,16 +107,6 @@ func TestCreateRunnerFile(t *testing.T) {
 	}
 }
 
-func TestRemoveFilePath(t *testing.T) {
-	t.Parallel()
-	message := "/path/to/runner/file/PythonRunner.py had an error Python();<_aRunner.py"
-	expected := "PythonRunner.py had an error Python();<_aRunner.py"
-	mockFilePath := "/path/to/runner/file/PythonRunner.py"
-	actual := removeFilePath(message, mockFilePath)
-
-	assertEquals(expected, actual, t)
-}
-
 func TestAllSupportedDefaultSettingsJava(t *testing.T) {
 	t.Parallel()
 	actual := fileSettingsDefaults["java"]
@@ -173,7 +163,7 @@ func TestCreateFileAndAddCode(t *testing.T) {
 func TestGetRunnerFileLocation(t *testing.T) {
 	t.Parallel()
 	suffix := "Test.txt"
-	expected := "runner_files/Test.txt"
+	expected := "/securefs/runner_files/Test.txt"
 
 	actual := getRunnerFileLocation(suffix)
 

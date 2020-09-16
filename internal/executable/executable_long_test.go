@@ -29,6 +29,10 @@ func TestInfiniteRecursion(t *testing.T) {
 	expected := "Exception in thread \"main\" java.lang.StackOverflowError\n"
 	_, actual := exec.Run()
 
+	if actual == nil {
+		t.Fatal("TestInfiniteRecursion's Run did not produce an error.")
+	}
+
 	errorMessage := actual.Error()
 	newLineIndex := strings.Index(errorMessage, "\n") + 1
 	errorMessage = errorMessage[:newLineIndex]

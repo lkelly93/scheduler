@@ -42,13 +42,6 @@ func fillRestOfFileSettings(lang string, settings *FileSettings) *FileSettings {
 	return settings
 }
 
-//removeFilePath removes the file path from the error text of an executable.
-func removeFilePath(stdErr string, fileLocation string) string {
-	indexSlash := strings.LastIndex(fileLocation, "/") + 1
-	stdErr = strings.ReplaceAll(stdErr, fileLocation, fileLocation[indexSlash:])
-	return stdErr
-}
-
 //createFileAndAddCode creates the runner file and adds the code to the file
 func createFileAndAddCode(outFileName string, code string) error {
 	runnerFile, err := os.Create(outFileName)
@@ -62,9 +55,10 @@ func createFileAndAddCode(outFileName string, code string) error {
 //getRunnerFileLocation returns a the string used to create the file runner in
 //the system.
 func getRunnerFileLocation(fileName string) string {
-	if _, err := os.Stat("runner_files"); !os.IsNotExist(err) {
+	dir := "/securefs/runner_files/"
+	if _, err := os.Stat(dir); !os.IsNotExist(err) {
 		var location strings.Builder
-		location.WriteString("runner_files/")
+		location.WriteString(dir)
 		location.WriteString(fileName)
 		return location.String()
 	}

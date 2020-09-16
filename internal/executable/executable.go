@@ -5,9 +5,11 @@ package executable
 import (
 	"bytes"
 	"context"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -35,44 +37,83 @@ func NewExecutable(lang string, code string, settings *FileSettings) (Executable
 //should be located in the same directory as the file that class run.
 //If this is not the case, Run will just put it in the same directory
 func (state *executableState) Run() (string, error) {
-	timeoutInSeconds := 15
 	state.settings = fillRestOfFileSettings(state.lang, state.settings)
 	//Create the file and get the data to run it. If sys command is an empty
 	//string then we had a compilation error and the error is stored in the
 	//fileLocation variable.
 	sysCommand, fileLocation, err := state.createFile(state.code, state.settings)
 	if err != nil {
-		return "", err
+		log.Println(err)
+		return "", &CompilationError{errMessage: err.Error()}
 	}
 	//Remove the old files
 	defer os.Remove(fileLocation)
 
+	timeoutInSeconds := 15
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
-		time.Duration(15)*time.Second)
-
+		time.Duration(timeoutInSeconds)*time.Second,
+	)
 	defer cancel()
 
 	//Get the system resources to run the command
-	command := exec.CommandContext(ctx, sysCommand, fileLocation)
+	cmd := exec.CommandContext(
+		ctx,
+		"executable_container",
+		sysCommand,
+		fileLocation,
+	)
 
-	var stOut bytes.Buffer
-	var stErr bytes.Buffer
+	var stdOut bytes.Buffer
+	var stdErr bytes.Buffer
+	cmd.Stdout = &stdOut
+	cmd.Stderr = &stdErr
 
-	command.Stdout = &stOut
-	command.Stderr = &stErr
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Cloneflags: syscall.CLONE_NEWNS |
+			syscall.CLONE_NEWUTS |
+			syscall.CLONE_NEWIPC |
+			syscall.CLONE_NEWPID |
+			syscall.CLONE_NEWNET |
+			syscall.CLONE_NEWUSER,
+		UidMappings: []syscall.SysProcIDMap{
+			{
+				ContainerID: 0,
+				HostID:      os.Getuid(),
+				Size:        1,
+			},
+		},
+		GidMappings: []syscall.SysProcIDMap{
+			{
+				ContainerID: 0,
+				HostID:      os.Getgid(),
+				Size:        1,
+			},
+		},
+	}
 
 	//Run the command and get the stdOut/stdErr
-	err = command.Run()
-	if ctx.Err() == context.DeadlineExceeded {
-		return "", &TimeLimitExceededError{maxTime: timeoutInSeconds}
-	}
+	// log.Panicln(cmd.Path)
+	err = cmd.Run()
 	if err != nil {
-		errorMessage := removeFilePath(stErr.String(), fileLocation)
-		//Remove FileNamePrefix as well.
-		errorMessage = strings.ReplaceAll(errorMessage, state.settings.FileNamePrefix, "")
-		return "", &RuntimeError{errMessage: errorMessage}
+		if ctx.Err() == context.DeadlineExceeded {
+			err := &TimeLimitExceededError{maxTime: timeoutInSeconds}
+			log.Println(err)
+			return stdOut.String(), err
+		}
+		log.Println(err)
+		return "", &RuntimeError{errMessage: err.Error()}
 	}
 
-	return string(stOut.String()), nil
+	if stdErr.Len() != 0 {
+		errorMessage := strings.ReplaceAll(stdErr.String(), state.settings.FileNamePrefix, "")
+
+		sizeOfDateTiemStamp := 20
+		errorMessage = errorMessage[sizeOfDateTiemStamp:]
+
+		err := &RuntimeError{errMessage: errorMessage}
+		log.Println(err)
+		return stdOut.String(), err
+	}
+	return string(stdOut.String()), nil
 }
