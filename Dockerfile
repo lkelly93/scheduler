@@ -66,6 +66,9 @@ RUN cp -r /usr/*  /securefs/usr/
 RUN cp -r /etc/*  /securefs/etc/
 RUN cp -r /var/*  /securefs/var/
 
+
+
+
 ###############################
 ### Copy over required files ##
 ###############################
