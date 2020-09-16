@@ -44,7 +44,10 @@ func StartNewScheduler(schedulerName string) (string, error) {
 	resp, err := cli.ContainerCreate(
 		ctx,
 		&container.Config{Image: imageID},
-		&container.HostConfig{NetworkMode: container.NetworkMode(networkName)},
+		&container.HostConfig{
+			NetworkMode: container.NetworkMode(networkName),
+			Privileged:  true,
+		},
 		nil,
 		schedulerName,
 	)
