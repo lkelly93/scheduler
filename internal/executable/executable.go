@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -62,6 +61,7 @@ func (state *executableState) Run() (string, error) {
 		"executable_container",
 		sysCommand,
 		fileLocation,
+		state.settings.FileNamePrefix,
 	)
 
 	var stdOut bytes.Buffer
@@ -93,7 +93,6 @@ func (state *executableState) Run() (string, error) {
 	}
 
 	//Run the command and get the stdOut/stdErr
-	// log.Panicln(cmd.Path)
 	err = cmd.Run()
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
@@ -106,14 +105,12 @@ func (state *executableState) Run() (string, error) {
 	}
 
 	if stdErr.Len() != 0 {
-		errorMessage := strings.ReplaceAll(stdErr.String(), state.settings.FileNamePrefix, "")
-
 		sizeOfDateTiemStamp := 20
-		errorMessage = errorMessage[sizeOfDateTiemStamp:]
+		errorMessage := stdErr.String()[sizeOfDateTiemStamp:]
 
 		err := &RuntimeError{errMessage: errorMessage}
-		log.Println(err)
 		return stdOut.String(), err
 	}
+
 	return string(stdOut.String()), nil
 }

@@ -6,37 +6,46 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
-	"syscall"
 )
 
-type configSettings struct {
-	hostname string
-	rootLoc  string
-}
-
 func main() {
+	if len(os.Args) != 4 {
+		log.Print("This file should only be run through the executable package. ")
+		log.Fatal("Failure to do so could cause damage to the system it is running on.\n")
+	}
 	initContainerAndRunProgram()
 }
 
 func initContainerAndRunProgram() {
+	rootLoc := "/securefs"
+
+	sysCommand := os.Args[1]
+	fileLocation := strings.ReplaceAll(
+		os.Args[2],
+		rootLoc,
+		"",
+	)
+	fileNamePrefix := os.Args[3]
+
+	var procLoc strings.Builder
+	procLoc.WriteString(rootLoc)
+	procLoc.WriteString("/")
+	procLoc.WriteString(fileNamePrefix)
+	procLoc.WriteString("proc")
+
 	containerSettings := configSettings{
-		hostname: "runner",
-		rootLoc:  "/securefs",
+		hostname:     "runner",
+		rootLoc:      rootLoc,
+		slashProcLoc: procLoc.String(),
 	}
 
 	containerSettings.setupInternalContainer()
-
-	sysCommand := os.Args[1]
-	fileLocation := os.Args[2]
-	fileLocation = strings.ReplaceAll(fileLocation,
-		containerSettings.rootLoc,
-		"")
-	runProgramInContainer(sysCommand, fileLocation)
+	runProgramInContainer(sysCommand, fileLocation, fileNamePrefix)
+	containerSettings.tearDownContainer()
 }
 
-func runProgramInContainer(sysCommand string, fileLocation string) {
+func runProgramInContainer(sysCommand string, fileLocation string, fileNamePrefix string) {
 	cmd := exec.Command(sysCommand, fileLocation)
 
 	var stdErr bytes.Buffer
@@ -47,48 +56,13 @@ func runProgramInContainer(sysCommand string, fileLocation string) {
 
 	err := cmd.Run()
 
-	if err != nil {
-		log.Print(removeFilePath(stdErr.String(), fileLocation))
+	if err != nil || stdErr.Len() != 0 {
+		log.Print(&programError{
+			fileNamePrefix: fileNamePrefix,
+			fileLocation:   fileLocation,
+			errMess:        stdErr.String(),
+		})
 	}
 
 	fmt.Print(removeFilePath(stdOut.String(), fileLocation))
-}
-
-func (cs *configSettings) setupInternalContainer() {
-	mountProc(cs.rootLoc)
-	changeHostName(cs.hostname)
-	changeRoot(cs.rootLoc)
-}
-
-func changeHostName(name string) {
-	must(syscall.Sethostname([]byte(name)))
-}
-
-func changeRoot(newRoot string) {
-	must(syscall.Chroot(newRoot))
-	must(os.Chdir("/"))
-}
-
-func mountProc(rootLocation string) {
-	source := "proc"
-	target := filepath.Join(rootLocation, "/proc")
-	fstype := "proc"
-	flags := uintptr(0)
-	data := ""
-
-	must(os.MkdirAll(target, 0755))
-	must(syscall.Mount(source, target, fstype, flags, data))
-}
-
-func must(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-//removeFilePath removes the file path from the error text of an executable.
-func removeFilePath(stdErr string, fileLocation string) string {
-	indexSlash := strings.LastIndex(fileLocation, "/") + 1
-	stdErr = strings.ReplaceAll(stdErr, fileLocation, fileLocation[indexSlash:])
-	return stdErr
 }
