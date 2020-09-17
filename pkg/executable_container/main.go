@@ -28,21 +28,13 @@ func initContainerAndRunProgram() {
 	)
 	fileNamePrefix := os.Args[3]
 
-	var procLoc strings.Builder
-	procLoc.WriteString(rootLoc)
-	procLoc.WriteString("/")
-	procLoc.WriteString(fileNamePrefix)
-	procLoc.WriteString("proc")
-
 	containerSettings := configSettings{
-		hostname:     "runner",
-		rootLoc:      rootLoc,
-		slashProcLoc: procLoc.String(),
+		hostname: "runner",
+		rootLoc:  rootLoc,
 	}
 
 	containerSettings.setupInternalContainer()
 	runProgramInContainer(sysCommand, fileLocation, fileNamePrefix)
-	containerSettings.tearDownContainer()
 }
 
 func runProgramInContainer(sysCommand string, fileLocation string, fileNamePrefix string) {
@@ -64,5 +56,5 @@ func runProgramInContainer(sysCommand string, fileLocation string, fileNamePrefi
 		})
 	}
 
-	fmt.Print(removeFilePath(stdOut.String(), fileLocation))
+	fmt.Print(parseOutput(stdOut.String(), fileLocation, fileNamePrefix))
 }

@@ -3,17 +3,17 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"syscall"
 )
 
 type configSettings struct {
-	hostname     string
-	rootLoc      string
-	slashProcLoc string
+	hostname string
+	rootLoc  string
 }
 
 func (cs *configSettings) setupInternalContainer() {
-	mountProc(cs.slashProcLoc)
+	mountProc(cs.rootLoc)
 	changeHostName(cs.hostname)
 	changeRoot(cs.rootLoc)
 }
@@ -27,14 +27,15 @@ func changeRoot(newRoot string) {
 	must(os.Chdir("/"))
 }
 
-func mountProc(procLocation string) {
+func mountProc(newRoot string) {
 	source := "proc"
 	fstype := "proc"
+	target := filepath.Join(newRoot, "/path")
 	flags := uintptr(0)
 	data := ""
 
-	must(os.MkdirAll(procLocation, 0755))
-	must(syscall.Mount(source, procLocation, fstype, flags, data))
+	must(os.MkdirAll(target, 0755))
+	must(syscall.Mount(source, target, fstype, flags, data))
 }
 
 func must(err error) {
