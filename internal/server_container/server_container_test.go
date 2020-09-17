@@ -23,7 +23,11 @@ var serverIP string
 
 func TestMain(m *testing.M) {
 	schedulerName := "scheduler1"
-	IP, err := container.StartNewScheduler(schedulerName)
+	var StartNewSchedulerDelayInMilliseconds int64 = 10000
+	IP, err := container.StartNewScheduler(
+		schedulerName,
+		StartNewSchedulerDelayInMilliseconds,
+	)
 	serverIP = IP
 	if err != nil {
 		if _, ok := err.(*container.UnreachableContainerError); ok {

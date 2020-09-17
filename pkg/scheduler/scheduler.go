@@ -7,5 +7,5 @@ import (
 //StartNewScheduler starts a new scheduler with the given options.
 //returns the IP address for the given scheduler.
 func StartNewScheduler(schedulerName string) (string, error) {
-	return container.StartNewScheduler(schedulerName)
+	return container.StartNewScheduler(schedulerName, 0)
 }

@@ -19,8 +19,12 @@ import (
 )
 
 //StartNewScheduler starts a new scheduler with the given options.
-//returns the IP address for the given scheduler.
-func StartNewScheduler(schedulerName string) (string, error) {
+//returns the IP address for the given scheduler. StartNewScheduler check for
+//and UnreachableContainerError for the given delay amount.
+//schedulerName is the name of the scheduler you want created
+//returnDelay is how long you want to check for an UnreachableContainerError
+//(in milliseconds) before returning the an error.
+func StartNewScheduler(schedulerName string, returnDelay int64) (string, error) {
 	///Defaults
 	dockerfile := "Dockerfile_standard"
 	networkName := "scheduler-cluster"
@@ -99,7 +103,7 @@ func StartNewScheduler(schedulerName string) (string, error) {
 		}
 	}(ctx)
 
-	timer := time.After(1 * time.Second)
+	timer := time.After(time.Duration(returnDelay) * time.Second)
 	select {
 	case <-works:
 		return IP, nil
