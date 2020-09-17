@@ -50,12 +50,12 @@ securefs/media \
 securefs/mnt \
 securefs/root \
 securefs/srv \
-securefs/tmp 
+securefs/tmp \
+securefs/sys
 
 # Mounted/Used in Scheduler
 RUN mkdir securefs/proc \
 securefs/runner_files \ 
-securefs/sys
 
 # Copy all the needed info
 RUN cp -r /bin/* /securefs/bin/
