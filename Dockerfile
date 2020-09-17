@@ -81,4 +81,4 @@ ENV PATH="$PATH:/root/go/bin"
 
 EXPOSE 3000
 
-CMD ["scheduler"]
+CMD bash
