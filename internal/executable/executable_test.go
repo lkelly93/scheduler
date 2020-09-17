@@ -10,25 +10,6 @@ import (
 	"testing"
 )
 
-func TestDebug(t *testing.T) {
-	lang := "python"
-	var codeBuilder strings.Builder
-	codeBuilder.WriteString("os.system(\"ls /sys\")\n")
-	// codeBuilder.WriteString("os.system(\"ps\")\n")
-	codeBuilder.WriteString("print(\"Hello World\")")
-	code := codeBuilder.String()
-	exe, _ := NewExecutable(lang, code, &FileSettings{
-		Imports: "import os",
-	})
-
-	out, err := exe.Run()
-	if err != nil {
-		t.Errorf("Error:\n%s", err.Error())
-	}
-	t.Errorf("Output:\n%s", out)
-
-}
-
 func TestNewExecutable(t *testing.T) {
 	type args struct {
 		lang     string

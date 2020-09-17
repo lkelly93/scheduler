@@ -1,12 +1,17 @@
 //Package container is a package that will handle the creation and running
 //of the docker image that scheduler will run in
-package container
+package server_container
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
-	"os"
+	"net/http"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -44,7 +49,10 @@ func StartNewScheduler(schedulerName string) (string, error) {
 	resp, err := cli.ContainerCreate(
 		ctx,
 		&container.Config{Image: imageID},
-		&container.HostConfig{NetworkMode: container.NetworkMode(networkName)},
+		&container.HostConfig{
+			NetworkMode: container.NetworkMode(networkName),
+			Privileged:  true,
+		},
 		nil,
 		schedulerName,
 	)
@@ -63,7 +71,41 @@ func StartNewScheduler(schedulerName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return info.NetworkSettings.Networks[networkName].IPAddress, nil
+
+	IP := info.NetworkSettings.Networks[networkName].IPAddress
+	works := make(chan bool)
+	ctx, canelRoutine := context.WithCancel(context.Background())
+	defer canelRoutine()
+
+	go func(ctx context.Context) {
+		requestBody, _ := json.Marshal(map[string]string{
+			"Code": "print()",
+		})
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			for {
+				_, err := http.Post(
+					fmt.Sprintf("http://%s:%d/execute/python", IP, 3000),
+					"application/json",
+					bytes.NewBuffer(requestBody),
+				)
+				if err == nil {
+					works <- true
+					return
+				}
+			}
+		}
+	}(ctx)
+
+	timer := time.After(1 * time.Second)
+	select {
+	case <-works:
+		return IP, nil
+	case <-timer:
+		return IP, &UnreachableContainerError{name: schedulerName}
+	}
 }
 
 //createSchedulerClusterNetworkIfNeeded checks to see if the "Scheduler-cluser"
@@ -118,7 +160,8 @@ func pullDockerImageFromRepo(cli *client.Client) {
 		log.Fatal(err)
 	}
 	defer out.Close()
-	io.Copy(os.Stdout, out)
+
+	io.Copy(ioutil.Discard, out)
 }
 
 func findImage(cli *client.Client, imageTag string) (bool, error) {
