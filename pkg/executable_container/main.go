@@ -81,7 +81,6 @@ func mountProc(rootLocation string) {
 	must(syscall.Mount(source, target, fstype, flags, data))
 }
 
-
 func mountSys(rootLocation string) {
 	source := "sys"
 	target := filepath.Join(rootLocation, "/proc")

@@ -1,4 +1,4 @@
 .vim/
 .vscode/
 LimitedDockerfile
-securefs.tar.gz
+*_debug_*
