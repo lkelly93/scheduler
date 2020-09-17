@@ -14,6 +14,7 @@ type configSettings struct {
 
 func (cs *configSettings) setupInternalContainer() {
 	mountProc(cs.rootLoc)
+	mountSys(cs.rootLoc)
 	changeHostName(cs.hostname)
 	changeRoot(cs.rootLoc)
 }
@@ -30,11 +31,22 @@ func changeRoot(newRoot string) {
 func mountProc(newRoot string) {
 	source := "proc"
 	fstype := "proc"
-	target := filepath.Join(newRoot, "/path")
+	target := filepath.Join(newRoot, "/proc")
 	flags := uintptr(0)
 	data := ""
 
 	must(os.MkdirAll(target, 0755))
+	must(syscall.Mount(source, target, fstype, flags, data))
+}
+
+func mountSys(rootLocation string) {
+	source := "sysfs"
+	target := filepath.Join(rootLocation, "/sys")
+	fstype := "sysfs"
+	flags := uintptr(0)
+	data := ""
+
+	os.MkdirAll(target, 0755)
 	must(syscall.Mount(source, target, fstype, flags, data))
 }
 
