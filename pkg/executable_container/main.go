@@ -56,7 +56,7 @@ func runProgramInContainer(sysCommand string, fileLocation string) {
 
 func (cs *configSettings) setupInternalContainer() {
 	mountProc(cs.rootLoc)
-	// mountSys(cs.rootLoc)
+	mountSys(cs.rootLoc)
 	changeHostName(cs.hostname)
 	changeRoot(cs.rootLoc)
 }
