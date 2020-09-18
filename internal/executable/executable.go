@@ -102,6 +102,9 @@ func (state *executableState) Run() (string, error) {
 			return stdOut.String(), err
 		}
 		log.Println(err)
+		if stdErr.Len() != 0 {
+			log.Println(stdErr.String())
+		}
 		return "", &RuntimeError{errMessage: err.Error()}
 	}
 
