@@ -13,19 +13,33 @@ type configSettings struct {
 }
 
 func (cs *configSettings) setupInternalContainer() {
+	setupAllCGroups()
+
 	mountProc(cs.rootLoc)
 	mountSys(cs.rootLoc)
+
+	//Change hostname and Chroot.
 	changeHostName(cs.hostname)
 	changeRoot(cs.rootLoc)
+
 }
 
 func changeHostName(name string) {
-	must(syscall.Sethostname([]byte(name)))
+	err := syscall.Sethostname([]byte(name))
+	if err != nil {
+		log.Fatalf("Error setting hostname - Error Type:%T", err)
+	}
 }
 
 func changeRoot(newRoot string) {
-	must(syscall.Chroot(newRoot))
-	must(os.Chdir("/"))
+	err := syscall.Chroot(newRoot)
+	if err != nil {
+		log.Fatalf("Error changing root to /securefs - Error Type:%T", err)
+	}
+	err = os.Chdir("/")
+	if err != nil {
+		log.Fatalf("Error changing dir to \"/\" - Error Type:%T", err)
+	}
 }
 
 func mountProc(newRoot string) {
@@ -35,8 +49,15 @@ func mountProc(newRoot string) {
 	flags := uintptr(0)
 	data := ""
 
-	must(os.MkdirAll(target, 0755))
-	must(syscall.Mount(source, target, fstype, flags, data))
+	checkMkdirErrors(
+		os.MkdirAll(target, 0755),
+		"/securesfs/proc",
+	)
+
+	err := syscall.Mount(source, target, fstype, flags, data)
+	if err != nil {
+		log.Fatalf("Error mounting /securefs/proc - Error Type:%T", err)
+	}
 }
 
 func mountSys(rootLocation string) {
@@ -46,12 +67,13 @@ func mountSys(rootLocation string) {
 	flags := uintptr(0)
 	data := ""
 
-	os.MkdirAll(target, 0755)
-	must(syscall.Mount(source, target, fstype, flags, data))
-}
+	checkMkdirErrors(
+		os.MkdirAll(target, 0755),
+		"/securesfs/sys",
+	)
 
-func must(err error) {
+	err := syscall.Mount(source, target, fstype, flags, data)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error mounting /securefs/sys - Error Type:%T", err)
 	}
 }

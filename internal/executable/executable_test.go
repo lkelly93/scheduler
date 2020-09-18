@@ -280,7 +280,6 @@ func TestRuns(t *testing.T) {
 					t.Errorf("%s returned an error that was not expected, error was %T", test.name, err)
 					return
 				}
-
 				assertEquals(test.expectedError.Error(), err.Error(), t)
 				return
 			} else if (err != nil) && (test.expectedError == nil) {

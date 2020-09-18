@@ -51,24 +51,21 @@ securefs/mnt \
 securefs/root \
 securefs/srv \
 securefs/tmp \
-securefs/sys
+securefs/sys \
+securefs/dev 
 
 # Mounted/Used in Scheduler
 RUN mkdir securefs/proc \
-securefs/runner_files \ 
+securefs/runner_files 
 
 # Copy all the needed info
 RUN cp -r /bin/* /securefs/bin/
 RUN cp -r /sbin/* /securefs/sbin/
 RUN cp -r /lib/* /securefs/lib/
 RUN cp -r /lib64/*  /securefs/lib64/
-RUN cp -r /dev/*  /securefs/dev/
 RUN cp -r /usr/*  /securefs/usr/
 RUN cp -r /etc/*  /securefs/etc/
 RUN cp -r /var/*  /securefs/var/
-
-
-
 
 ###############################
 ### Copy over required files ##
@@ -81,4 +78,4 @@ ENV PATH="$PATH:/root/go/bin"
 
 EXPOSE 3000
 
-CMD bash
+CMD ["scheduler"]
