@@ -1,79 +1,69 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"path/filepath"
 	"syscall"
 )
 
-type configSettings struct {
-	hostname string
-	rootLoc  string
-}
+func (cs *containerSettings) setupInternalContainer() {
+	// setupAllCGroups()
 
-func (cs *configSettings) setupInternalContainer() {
-	setupAllCGroups()
-
-	mountProc(cs.rootLoc)
-	mountSys(cs.rootLoc)
+	cs.mountProc()
+	cs.mountSys()
 
 	//Change hostname and Chroot.
-	changeHostName(cs.hostname)
-	changeRoot(cs.rootLoc)
+	cs.changeHostName()
+	cs.changeRoot()
 
 }
 
-func changeHostName(name string) {
-	err := syscall.Sethostname([]byte(name))
+func (cs *containerSettings) changeHostName() {
+	err := syscall.Sethostname([]byte(cs.hostname))
 	if err != nil {
-		log.Fatalf("Error setting hostname - Error Type:%T", err)
+		message := fmt.Sprintf("Error setting hostname - Error Type:%T", err)
+		cs.serverFatal(message)
 	}
 }
 
-func changeRoot(newRoot string) {
-	err := syscall.Chroot(newRoot)
+func (cs *containerSettings) changeRoot() {
+	err := syscall.Chroot(cs.rootLoc)
 	if err != nil {
-		log.Fatalf("Error changing root to /securefs - Error Type:%T", err)
+		message := fmt.Sprintf("Error changing root to /securefs - Error Type:%T", err)
+		cs.serverFatal(message)
 	}
 	err = os.Chdir("/")
 	if err != nil {
-		log.Fatalf("Error changing dir to \"/\" - Error Type:%T", err)
+		message := fmt.Sprintf("Error changing dir to \"/\" - Error Type:%T", err)
+		cs.serverFatal(message)
 	}
 }
 
-func mountProc(newRoot string) {
+func (cs *containerSettings) mountProc() {
 	source := "proc"
 	fstype := "proc"
-	target := filepath.Join(newRoot, "/proc")
+	target := filepath.Join(cs.rootLoc, "/proc")
 	flags := uintptr(0)
 	data := ""
 
-	checkMkdirErrors(
-		os.MkdirAll(target, 0755),
-		"/securesfs/proc",
-	)
-
 	err := syscall.Mount(source, target, fstype, flags, data)
 	if err != nil {
-		log.Fatalf("Error mounting /securefs/proc - Error Type:%T", err)
+		message := fmt.Sprintf("Error mounting /securefs/proc - Error Type:%T", err)
+		cs.serverFatal(message)
 	}
 }
 
-func mountSys(rootLocation string) {
+func (cs *containerSettings) mountSys() {
 	source := "sysfs"
-	target := filepath.Join(rootLocation, "/sys")
+	target := filepath.Join(cs.rootLoc, "/sys")
 	fstype := "sysfs"
 	flags := uintptr(0)
 	data := ""
 
-	checkMkdirErrors(
-		os.MkdirAll(target, 0755),
-		"/securesfs/sys",
-	)
-
 	err := syscall.Mount(source, target, fstype, flags, data)
 	if err != nil {
-		log.Fatalf("Error mounting /securefs/sys - Error Type:%T", err)
+		message := fmt.Sprintf("Error mounting /securefs/sys - Error Type:%T", err)
+		cs.serverFatal(message)
 	}
 }

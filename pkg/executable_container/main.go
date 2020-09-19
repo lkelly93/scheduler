@@ -28,12 +28,13 @@ func initContainerAndRunProgram() {
 	)
 	fileNamePrefix := os.Args[3]
 
-	containerSettings := configSettings{
-		hostname: "runner",
-		rootLoc:  rootLoc,
+	cs := containerSettings{
+		hostname:       "runner",
+		rootLoc:        rootLoc,
+		fileNamePrefix: fileNamePrefix,
 	}
 
-	containerSettings.setupInternalContainer()
+	cs.setupInternalContainer()
 	runProgramInContainer(sysCommand, fileLocation, fileNamePrefix)
 }
 
@@ -49,11 +50,7 @@ func runProgramInContainer(sysCommand string, fileLocation string, fileNamePrefi
 	err := cmd.Run()
 
 	if err != nil || stdErr.Len() != 0 {
-		log.Print(&programError{
-			fileNamePrefix: fileNamePrefix,
-			fileLocation:   fileLocation,
-			errMess:        stdErr.String(),
-		})
+		log.Print(parseOutput(stdErr.String(), fileLocation, fileNamePrefix))
 	}
 
 	fmt.Print(parseOutput(stdOut.String(), fileLocation, fileNamePrefix))

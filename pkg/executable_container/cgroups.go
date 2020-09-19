@@ -16,11 +16,6 @@ func pidGroup() {
 	cgroup := "/sys/fs/cgroup/"
 	pids := filepath.Join(cgroup, "pids")
 
-	checkMkdirErrors(
-		os.Mkdir(filepath.Join(pids, "runner"), 0755),
-		"/sys/fs/cgroups/pids/runner",
-	)
-
 	err := ioutil.WriteFile(filepath.Join(pids, "runner/pids.max"), []byte("50"), 0700)
 	if err != nil {
 		log.Fatalf("Error writing to /sys/fs/cgroup/pids/runner/pids.max - Error Type:%T", err)

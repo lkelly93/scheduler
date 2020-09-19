@@ -5,9 +5,11 @@ package executable
 import (
 	"bytes"
 	"context"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -94,13 +96,16 @@ func (state *executableState) Run() (string, error) {
 
 	//Run the command and get the stdOut/stdErr
 	err = cmd.Run()
-	if err != nil {
-		if ctx.Err() == context.DeadlineExceeded {
-			err := &TimeLimitExceededError{maxTime: timeoutInSeconds}
-			log.Println(err)
-			return stdOut.String(), err
-		}
+
+	checkLoggerFile(state.settings.FileNamePrefix)
+
+	if ctx.Err() == context.DeadlineExceeded {
+		err := &TimeLimitExceededError{maxTime: timeoutInSeconds}
 		log.Println(err)
+		return stdOut.String(), err
+	}
+	if err != nil {
+		log.Println(err.Error())
 		return "", &RuntimeError{errMessage: err.Error()}
 	}
 
@@ -113,4 +118,26 @@ func (state *executableState) Run() (string, error) {
 	}
 
 	return string(stdOut.String()), nil
+}
+
+func checkLoggerFile(fileNamePrefix string) {
+	var builder strings.Builder
+	builder.WriteString("/securefs/serverOutput/")
+	builder.WriteString(fileNamePrefix)
+	builder.WriteString(".log")
+
+	fileLoc := builder.String()
+
+	output, err := ioutil.ReadFile(fileLoc)
+
+	if err != nil && os.IsExist(err) {
+		log.Println("Could not open the logger file but it does exists.")
+		log.Println(err.Error())
+	}
+
+	if output != nil {
+		log.Println(string(output))
+	}
+
+	os.Remove(fileLoc)
 }

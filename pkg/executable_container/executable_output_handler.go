@@ -1,10 +1,12 @@
 package main
 
-import "strings"
+import (
+	"strings"
+)
 
 func parseOutput(message string, fileLocation string, fileNamePrefix string) string {
-	output := removeFileNamePrefix(message, fileNamePrefix)
-	return removeFilePath(output, fileLocation)
+	output := removeFilePath(message, fileLocation)
+	return removeFileNamePrefix(output, fileNamePrefix)
 
 }
 
