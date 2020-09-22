@@ -38,7 +38,6 @@ securefs/bin \
 securefs/sbin \
 securefs/lib \
 securefs/lib64 \
-securefs/dev \
 securefs/usr \
 securefs/etc \
 securefs/var
