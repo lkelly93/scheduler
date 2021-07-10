@@ -112,12 +112,18 @@ func (executeHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	//TODO add exec to queue here...
 	result, err := exec.Run()
 	if err != nil {
-		if _, ok = err.(*executable.RuntimeError); ok {
-			writeErrorResponse(rw, 200, "Runtime Error", err.Error())
-		} else if _, ok = err.(*executable.CompilationError); ok {
+		if _, ok = err.(*executable.CompilationError); ok {
 			writeErrorResponse(rw, 200, "Compilation Error", err.Error())
+		} else if _, ok = err.(*executable.IllegalUniqueIdentifier); ok {
+			writeErrorResponse(rw, 200, "Internal Server Error", "Error Code: 1234")
+		} else if _, ok = err.(*executable.RuntimeError); ok {
+			writeErrorResponse(rw, 200, "Runtime Error", err.Error())
+		} else if _, ok = err.(*executable.SystemError); ok {
+			writeErrorResponse(rw, 200, "System Error", err.Error())
 		} else if _, ok = err.(*executable.TimeLimitExceededError); ok {
-			writeErrorResponse(rw, 200, "Time Limit Exceeded", err.Error())
+			writeErrorResponse(rw, 200, "Process Killed", "Time Limit Exceeded")
+		} else if _, ok = err.(*executable.UnsupportedLanguageError); ok {
+			writeErrorResponse(rw, 200, "Unsupported Language", "Provided Language is not currently supported")
 		} else {
 			writeErrorResponse(rw, 500, "Internal Server Error", "Internal Server Error")
 		}
