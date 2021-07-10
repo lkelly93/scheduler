@@ -76,7 +76,7 @@ RUN cp -r /var/*  /securefs/var/
 
 #Install the scheduler
 RUN go get github.com/lkelly93/scheduler
-RUN go get github.com/lkelly93/scheduler/pkg/executable_container
+RUN go get github.com/lkelly93/executable/internal/executor
 ENV PATH="$PATH:/root/go/bin"
 
 EXPOSE 3000
