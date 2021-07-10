@@ -1,4 +1,4 @@
 .vim/
 .vscode/
-LimitedDockerfile
+Dockerfile.local_test
 *_debug_*
