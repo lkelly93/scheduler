@@ -1,4 +1,4 @@
 .vim/
 .vscode/
-Dockerfile.local_test
+Dockerfile.test
 *_debug_*

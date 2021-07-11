@@ -8,8 +8,9 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
-	github.com/lkelly93/executable v0.0.0-20200929021654-c21a14087d68
+	github.com/lkelly93/executable v0.0.0-20210711191448-5d50b6294f2d
 	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/otiai10/copy v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
 	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect

@@ -23,7 +23,8 @@ type errorResponse struct {
 }
 
 type executionOutputResponse struct {
-	Stdout string
+	StdOut string
+	StdErr string
 }
 
 func writeJSON(rw http.ResponseWriter, obj interface{}) error {
@@ -131,7 +132,8 @@ func (executeHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 	rw.WriteHeader(200)
 	writeJSON(rw, executionOutputResponse{
-		Stdout: result.Output,
+		StdOut: result.StdOut,
+		StdErr: result.StdErr,
 	})
 }
 
