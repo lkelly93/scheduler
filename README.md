@@ -1,6 +1,5 @@
 # Scheduler
-
-This will be the backend for a project, it will receive code from the controller, run the code sequentially, and return the results.
+Backed for executor package.
 
 # Requirments
   * Docker 19.03.8+
